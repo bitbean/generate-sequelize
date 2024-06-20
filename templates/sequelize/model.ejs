@@ -1,0 +1,83 @@
+/* auto-generated imports */
+<%%- include(this.dirName + "/imports.ejs" , { imports }) -%>
+  /* auto-generated imports */
+  import {
+  /* auto-generated sequelize imports */
+  <%%- include(this.dirName + "/import-props.ejs" , { properties: [...seqImports] }) -%>
+    /* auto-generated sequelize imports */
+    Model,
+    Sequelize,
+    Optional,
+    } from "sequelize";
+
+    type <%- className %>AttributeKeys =
+    /* auto-generated attributes */
+    <%- include("../partials/keys.ejs", { keys: [...columns.values()].map(c => c.name) }) -%>
+    /* auto-generated attributes */
+
+    export type <%- className %>Attributes = Pick<%- "<" %><%- className %>, <%- className %>AttributeKeys>;
+
+    export type <%- className %>OptionalAttributes =
+    /* auto-generated optional attributes */
+    <%- include("../partials/keys.ejs", { keys: [...columns.values()].filter(c => !c.definition.allowNull && (c.definition.defaultValue || c.definition.autoIncrement)).map(c => c.name) }) -%>
+    /* auto-generated optional attributes */
+
+    export type <%- className %>CreationAttributes = Optional<%- "<" %><%- className %>Attributes, <%- className %>OptionalAttributes>;
+
+    export class <%- className %>
+    extends Model<%- "<" %><%- className %>Attributes, <%- className %>CreationAttributes>
+    implements <%- className %>Attributes
+    {
+    /* auto-generated properties */
+    <% [...columns.values()].forEach(col => { -%>
+    <%- include("../partials/property.ejs", { name: col.name, allowNull: col.definition.allowNull, tsType: col.tsType}) %>
+    <% }) -%>
+    /* auto-generated properties */
+
+    /* auto-generated associations */
+    <% [...relations.entries()].forEach(([name, rel]) => { -%>
+    <%- include("../partials/association-prop.ejs", { name, ...rel, optional: !!rel.optional }) -%>
+    <% }) -%>
+    /* auto-generated associations */
+
+    static initModel(sequelize: Sequelize): typeof <%- className %> {
+    return <%- className %>.init(
+    {
+    /* auto-generated definitions */
+    <% [...columns.values()].forEach(({ name, definition: { type, allowNull, primaryKey, autoIncrement, defaultValue, comment, field }}) => { -%>
+    <%- name %>: {
+    type: <%- type %>,
+    allowNull: <%- allowNull ? true : false %>,
+    <%- primaryKey ? 'primaryKey: true,\n' : '' -%>
+    <%- autoIncrement ? 'autoIncrement: true,\n' : '' -%>
+    <% if (field) { -%>
+    field: "<%- field %>",
+    <% } -%>
+    <% if (defaultValue) { -%>
+    <% if (defaultValue).startsWith("fn") { this.addImport("sequelize", "fn") } -%>
+    <% if (defaultValue).startsWith("literal") { this.addImport("sequelize", "literal") } -%>
+    defaultValue: <%- defaultValue %>,
+    <% } -%>
+    <% if (comment) { -%>
+    comment: "<%- comment %>",
+    <% } -%>
+    },
+    <% }) -%>
+    /* auto-generated definitions */
+    },
+    {
+    sequelize,
+    <% if (className !== tableName) { -%>
+    tableName: "<%- tableName %>",
+    <% } -%>
+    indexes: [
+    /* auto-generated indexes */
+    <% indexes.forEach(index => { -%>
+    <%- JSON.stringify(index) %>,
+    <% }) -%>
+    /* auto-generated indexes */
+    ],
+    },
+    );
+    }
+    }

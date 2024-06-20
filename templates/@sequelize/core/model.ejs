@@ -1,0 +1,91 @@
+import {
+/* auto-generated sequelize imports */
+<%%- include(this.dirName + "/import-props.ejs" , { properties: [...seqImports] }) -%>
+  /* auto-generated sequelize imports */
+  Table,
+  } from "@sequelize/core/decorators-legacy";
+  /* auto-generated imports */
+  <%%- include(this.dirName + "/imports.ejs" , { imports }) -%>
+    /* auto-generated imports */
+    import { Model, DataTypes } from "@sequelize/core";
+    type <%- modelName %>AttributeKeys =
+    /* auto-generated attributes */
+    <%- include("../../partials/keys.ejs", { keys: [...columns.values()].map(c => c.name) }) -%>
+    /* auto-generated attributes */
+    export type <%- modelName %>Attributes = Pick<%- "<" %><%- modelName %>, <%- modelName %>AttributeKeys>;
+    export type <%- modelName %>OptionalAttributes =
+    /* auto-generated optional attributes */
+    <%- include("../../partials/keys.ejs", { keys: [...columns.values()].filter(c => !c.definition.allowNull && (c.definition.defaultValue || c.definition.autoIncrement)).map(c => c.name) }) -%>
+    /* auto-generated optional attributes */
+    export type <%- modelName %>CreationAttributes = Omit<%- "<" %><%- modelName %>Attributes, <%- modelName %>OptionalAttributes> & Partial<%- "<" %>Pick<%- "<" %><%- modelName %>Attributes, <%- modelName %>OptionalAttributes>>;
+    @Table({
+    <% if (modelName !== tableName) { -%>
+    tableName: "<%- tableName %>",
+    <% } -%>
+    indexes: [
+    /* auto-generated indexes */
+    <% indexes.forEach(index => { -%>
+    <%- JSON.stringify(index) %>,
+    <% }) -%>
+    /* auto-generated indexes */
+    ],
+    })
+    export class <%- modelName %>
+    extends Model<%- "<" %><%- modelName %>Attributes, <%- modelName %>CreationAttributes>
+    implements <%- modelName %>Attributes {
+    /* auto-generated properties */
+    <% [...columns.values()].forEach(({ name, tsType, definition: { defaultValue, allowNull, autoIncrement, primaryKey, comment, type, field }}, i, arr) => { -%>
+    <% if (primaryKey) { -%>
+    <% this.seqImports.add("PrimaryKey") -%>
+    @PrimaryKey
+    <% } -%>
+    <% if (autoIncrement) { -%>
+    <% this.seqImports.add("AutoIncrement") -%>
+    @AutoIncrement
+    <% } -%>
+    <% if (defaultValue) { -%>
+    <% this.seqImports.add("Default") -%>
+    <% if (defaultValue).startsWith("fn") { this.addImport("@sequelize/core", "fn") } -%>
+    <% if (defaultValue).startsWith("literal") { this.addImport("@sequelize/core", "literal") } -%>
+    @Default(<%- defaultValue %>)
+    <% } -%>
+    <% if (comment) { -%>
+    <% this.seqImports.add("Comment") -%>
+    @Comment("<%- comment %>")
+    <% } -%>
+    <% if (field) { -%>
+    <% this.seqImports.add("ColumnName") %>
+    @ColumnName("<%- field %>")
+    <% } -%>
+    <% const nullDec = allowNull ? "AllowNull" : "NotNull" -%>
+    <% this.seqImports.add(nullDec) -%>
+    @<%- nullDec %>
+    <% this.seqImports.add("Attribute") -%>
+    @Attribute(<%- type %>)
+    <%- include("../../partials/property.ejs", { name, allowNull, tsType }) %>
+    <% if (i !== arr.length - 1) { -%>
+    <% } -%>
+    <% }) -%>
+    /* auto-generated properties */
+
+    /* auto-generated associations */
+    <% [...relations.entries()].sort(([,a], [,b]) => a.type === b.type ? 0 : a.type === "belongsToMany" ? -1 : b.type === 'belongsToMany' ? 1 : 0).forEach(([name, rel], i, arr) => { -%>
+    <% const relType = rel.type[0].toUpperCase() + rel.type.slice(1) -%>
+    <% this.seqImports.add(relType) -%>
+    <% this.addImport(`./${rel.targetFileName}`, rel.targetName) -%>
+    <% if (relType === "BelongsToMany") { -%>
+    <% this.addImport(`./${rel.throughFileName}`, rel.through) -%>
+    @BelongsToMany(() => <%- rel.targetName %>, {
+    through: () => <%- rel.through %>,
+    foreignKey: "<%- rel.foreignKey %>",
+    otherKey: "<%- rel.otherKey %>"
+    })
+    <% } else { -%>
+    @<%- relType %>(() => <%- rel.targetName %>, "<%- rel.foreignKey %>")
+    <% } -%>
+    <%- include("../../partials/association-prop.ejs", { name, ...rel, optional: !!rel.optional }) %>
+    <% if (i !== arr.length - 1) { -%>
+    <% } -%>
+    <% }) -%>
+    /* auto-generated associations */
+    }

@@ -1,0 +1,35 @@
+/* auto-generated imports */
+<% allTables.forEach(({ fileName, modelName }) => { -%>
+import { <%= modelName %> } from './<%= fileName %>';
+<% }) -%>
+/* auto-generated imports */
+import { Sequelize } from 'sequelize';
+
+export default function initModels(sequelize: Sequelize) {
+/* auto-generated inits */
+<% allTables.forEach(({ modelName }) => { -%>
+<%= modelName %>.initModel(sequelize);
+<% }) -%>
+/* auto-generated inits */
+
+/* auto-generated associations */
+<% allTables.forEach(table => { -%>
+<% [...table.relations.entries()].sort(([,a], [,b]) => a.type === b.type ? 0 : a.type === 'belongsToMany' ? -1 : b.type === 'belongsToMany' ? 1 : 0).forEach(([name, relation]) => { %>
+<%- table.modelName %>.<%- relation.type %>(<%- relation.targetName %>, {
+as: '<%= name %>',
+foreignKey: '<%= relation.foreignKey %>',
+<% if (relation.type === 'belongsToMany') { -%>
+through: '<%= relation.through %>',
+otherKey: '<%= relation.otherKey %>',
+<% } -%>
+});
+<% }) -%>
+<% }) -%>
+/* auto-generated associations */
+}
+
+/* auto-generated exports */
+<% allTables.forEach(({ fileName }) => { -%>
+export * from './<%= fileName %>';
+<% }) -%>
+/* auto-generated exports */
