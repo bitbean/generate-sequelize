@@ -1,0 +1,18 @@
+<% if (data.primaryKey) { -%>
+<% this.seqImports.add("PrimaryKey") -%>
+@PrimaryKey
+<% } -%>
+<% if (data.autoIncrement) { -%>
+<% this.seqImports.add("AutoIncrement") -%>
+@AutoIncrement
+<% } -%>
+<% if (data.defaultValue !== undefined) { -%>
+<% this.seqImports.add("Default") -%>
+<% if (typeof data.defaultValue === "string" && data.defaultValue.startsWith("fn")) { add("fn") } -%>
+<% if (typeof data.defaultValue === "string" && data.defaultValue.startsWith("literal")) { add("literal") } -%>
+@Default(<%- data.defaultValue %>)
+<% } -%>
+<% if (data.comment !== undefined) { -%>
+<% this.seqImports.add("Comment") -%>
+@Comment("<%- data.comment %>")
+<% } -%>

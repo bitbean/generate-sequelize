@@ -41,16 +41,7 @@ import {
     implements <%- modelName %>Attributes {
     /* auto-generated properties */
     <% [...columns.values()].forEach(({ name, tsType, definition: { defaultValue, allowNull, autoIncrement, primaryKey, comment, type, field }}, i, arr) => { -%>
-    <% if (defaultValue) { -%>
-    <% this.seqImports.add("Default") -%>
-    <% if (typeof defaultValue === "string" && defaultValue.startsWith("fn")) { this.seqImports.add("fn") } -%>
-    <% if (typeof defaultValue === "string" && defaultValue.startsWith("literal")) { this.seqImports.add("literal") } -%>
-    @Default(<%- defaultValue %>)
-    <% } -%>
-    <% if (comment) { -%>
-    <% this.seqImports.add("Comment") -%>
-    @Comment("<%- comment %>")
-    <% } -%>
+    <%- include("../partials/handleDecorators.ejs", { data: { defaultValue, comment, autoIncrement, primaryKey }, add: (prop) => this.seqImports.add(prop) }) -%>
     <% this.seqImports.add("AllowNull") -%>
     @AllowNull(<%- allowNull %>)
     <% this.seqImports.add("Column") -%>

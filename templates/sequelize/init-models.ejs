@@ -19,7 +19,7 @@ export default function initModels(sequelize: Sequelize) {
 as: '<%= name %>',
 foreignKey: '<%= relation.foreignKey %>',
 <% if (relation.type === 'belongsToMany') { -%>
-through: '<%= relation.through %>',
+through: <%= relation.through %>,
 otherKey: '<%= relation.otherKey %>',
 <% } -%>
 });

@@ -35,24 +35,7 @@ import {
     implements <%- modelName %>Attributes {
     /* auto-generated properties */
     <% [...columns.values()].forEach(({ name, tsType, definition: { defaultValue, allowNull, autoIncrement, primaryKey, comment, type, field }}, i, arr) => { -%>
-    <% if (primaryKey) { -%>
-    <% this.seqImports.add("PrimaryKey") -%>
-    @PrimaryKey
-    <% } -%>
-    <% if (autoIncrement) { -%>
-    <% this.seqImports.add("AutoIncrement") -%>
-    @AutoIncrement
-    <% } -%>
-    <% if (defaultValue) { -%>
-    <% this.seqImports.add("Default") -%>
-    <% if (typeof defaultValue === "string" && defaultValue.startsWith("fn")) { this.addImport("@sequelize/core", "fn") } -%>
-    <% if (typeof defaultValue === "string" && defaultValue.startsWith("literal")) { this.addImport("@sequelize/core", "literal") } -%>
-    @Default(<%- defaultValue %>)
-    <% } -%>
-    <% if (comment) { -%>
-    <% this.seqImports.add("Comment") -%>
-    @Comment("<%- comment %>")
-    <% } -%>
+    <%- include("../../partials/handleDecorators.ejs", { data: { defaultValue, comment, autoIncrement, primaryKey }, add: (prop) => this.addImport("@sequelize/core", prop) }) -%>
     <% if (field) { -%>
     <% this.seqImports.add("ColumnName") %>
     @ColumnName("<%- field %>")
