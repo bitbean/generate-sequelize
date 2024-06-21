@@ -54,8 +54,8 @@
     field: "<%- field %>",
     <% } -%>
     <% if (defaultValue) { -%>
-    <% if (defaultValue.startsWith("fn")) { this.addImport("sequelize", "fn") } -%>
-    <% if (defaultValue.startsWith("literal")) { this.addImport("sequelize", "literal") } -%>
+    <% if (typeof defaultValue === "string" && defaultValue.startsWith("fn")) { this.addImport("sequelize", "fn") } -%>
+    <% if (typeof defaultValue === "string" && defaultValue.startsWith("literal")) { this.addImport("sequelize", "literal") } -%>
     defaultValue: <%- defaultValue %>,
     <% } -%>
     <% if (comment) { -%>

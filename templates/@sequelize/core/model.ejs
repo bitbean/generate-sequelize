@@ -45,8 +45,8 @@ import {
     <% } -%>
     <% if (defaultValue) { -%>
     <% this.seqImports.add("Default") -%>
-    <% if (defaultValue.startsWith("fn")) { this.addImport("@sequelize/core", "fn") } -%>
-    <% if (defaultValue.startsWith("literal")) { this.addImport("@sequelize/core", "literal") } -%>
+    <% if (typeof defaultValue === "string" && defaultValue.startsWith("fn")) { this.addImport("@sequelize/core", "fn") } -%>
+    <% if (typeof defaultValue === "string" && defaultValue.startsWith("literal")) { this.addImport("@sequelize/core", "literal") } -%>
     @Default(<%- defaultValue %>)
     <% } -%>
     <% if (comment) { -%>
