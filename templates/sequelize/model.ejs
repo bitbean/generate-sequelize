@@ -8,6 +8,7 @@
     Model,
     Sequelize,
     Optional,
+    DataTypes,
     } from "sequelize";
 
     type <%- modelName %>AttributeKeys =
@@ -36,6 +37,7 @@
 
     /* auto-generated associations */
     <% [...relations.entries()].forEach(([name, rel]) => { -%>
+    <% this.addImport(`./${rel.targetFileName}`, rel.targetName) -%>
     <%- include("../partials/association-prop.ejs", { name, ...rel, optional: !!rel.optional }) -%>
     <% }) -%>
     /* auto-generated associations */
