@@ -46,7 +46,7 @@ export async function main() {
     await write(fileName, resolveImports, config);
   });
   const initFile = await ejs.renderFile(
-    path.join(targetLib, "init-models.ejs"),
+    path.join(targetLibTemplateDir, "init-models.ejs"),
     { allTables: [...tableData.values()] },
   );
   const initFilePath = path.join(config.directory, "init-models.ts");
