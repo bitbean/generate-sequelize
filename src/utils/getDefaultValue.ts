@@ -42,7 +42,7 @@ export default function getDefaultValue(
   if ((defaultValue as string).match(/\w+\(\)$/)) {
     return "fn('" + defaultValue.replace(/\(\)$/g, "") + "')";
   }
-  if (tsType === "number" && Number(defaultValue)) {
+  if (tsType === "number" && !isNaN(Number(defaultValue))) {
     return Number(defaultValue);
   }
   if (tsType === "Date") {
