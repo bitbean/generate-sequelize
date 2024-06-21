@@ -10,23 +10,23 @@
     Optional,
     } from "sequelize";
 
-    type <%- className %>AttributeKeys =
+    type <%- modelName %>AttributeKeys =
     /* auto-generated attributes */
     <%- include("../partials/keys.ejs", { keys: [...columns.values()].map(c => c.name) }) -%>
     /* auto-generated attributes */
 
-    export type <%- className %>Attributes = Pick<%- "<" %><%- className %>, <%- className %>AttributeKeys>;
+    export type <%- modelName %>Attributes = Pick<%- "<" %><%- modelName %>, <%- modelName %>AttributeKeys>;
 
-    export type <%- className %>OptionalAttributes =
+    export type <%- modelName %>OptionalAttributes =
     /* auto-generated optional attributes */
     <%- include("../partials/keys.ejs", { keys: [...columns.values()].filter(c => !c.definition.allowNull && (c.definition.defaultValue || c.definition.autoIncrement)).map(c => c.name) }) -%>
     /* auto-generated optional attributes */
 
-    export type <%- className %>CreationAttributes = Optional<%- "<" %><%- className %>Attributes, <%- className %>OptionalAttributes>;
+    export type <%- modelName %>CreationAttributes = Optional<%- "<" %><%- modelName %>Attributes, <%- modelName %>OptionalAttributes>;
 
-    export class <%- className %>
-    extends Model<%- "<" %><%- className %>Attributes, <%- className %>CreationAttributes>
-    implements <%- className %>Attributes
+    export class <%- modelName %>
+    extends Model<%- "<" %><%- modelName %>Attributes, <%- modelName %>CreationAttributes>
+    implements <%- modelName %>Attributes
     {
     /* auto-generated properties */
     <% [...columns.values()].forEach(col => { -%>
@@ -40,8 +40,8 @@
     <% }) -%>
     /* auto-generated associations */
 
-    static initModel(sequelize: Sequelize): typeof <%- className %> {
-    return <%- className %>.init(
+    static initModel(sequelize: Sequelize): typeof <%- modelName %> {
+    return <%- modelName %>.init(
     {
     /* auto-generated definitions */
     <% [...columns.values()].forEach(({ name, definition: { type, allowNull, primaryKey, autoIncrement, defaultValue, comment, field }}) => { -%>
@@ -67,7 +67,7 @@
     },
     {
     sequelize,
-    <% if (className !== tableName) { -%>
+    <% if (modelName !== tableName) { -%>
     tableName: "<%- tableName %>",
     <% } -%>
     indexes: [
