@@ -14,7 +14,7 @@ export default function initModels(sequelize: Sequelize) {
 
 /* auto-generated associations */
 <% allTables.forEach(table => { -%>
-<% [...table.relations.entries()].sort(([,a], [,b]) => a.type === b.type ? 0 : a.type === 'belongsToMany' ? -1 : b.type === 'belongsToMany' ? 1 : 0).forEach(([name, relation]) => { %>
+<% [...table.relations.entries()].sort(([,a], [,b]) => a.type === b.type ? 0 : a.type === 'belongsToMany' ? -1 : b.type === 'belongsToMany' ? 1 : 0).forEach(([name, relation]) => { -%>
 <%- table.modelName %>.<%- relation.type %>(<%- relation.targetName %>, {
 as: '<%= name %>',
 foreignKey: '<%= relation.foreignKey %>',

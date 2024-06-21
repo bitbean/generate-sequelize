@@ -39,7 +39,7 @@
     <% [...relations.entries()].forEach(([name, rel]) => { -%>
     <% this.addImport(`./${rel.targetFileName}`, rel.targetName) -%>
     <%- include("../partials/association-prop.ejs", { name, ...rel, optional: !!rel.optional }) -%>
-    <% }) -%>
+    <% }) %>
     /* auto-generated associations */
 
     static initModel(sequelize: Sequelize): typeof <%- modelName %> {
