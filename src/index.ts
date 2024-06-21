@@ -16,32 +16,37 @@ export async function main() {
   );
   console.log(configPath, "PATH FROM:", process.argv.length, process.argv);
   const config = (await import(configPath)).default as CustomOptions;
-  const { joinTables = [], username, password, database, ...rest } = config;
+  const {
+    joinTables,
+    username,
+    password,
+    database,
+    targetLib = "sequelize",
+    ...rest
+  } = config;
   const auto = new SequelizeAuto(database!, username!, password!, rest);
   const td = auto.relate(await auto.build());
-
   const tableData = getTableData(td, config);
 
-  addJoinTables(tableData, joinTables);
-  const templatesFolder = path.join(
-    "templates",
-    config.targetLib || "sequelize",
-  );
-  const fileTemplatePath = path.join(templatesFolder, "model.ejs");
+  joinTables && addJoinTables(tableData, joinTables);
+
+  const templatesRoot = path.join(__dirname, "..", "templates");
+  const targetLibTemplateDir = path.join(templatesRoot, targetLib);
+  const modelTemplatePath = path.join(targetLibTemplateDir, "model.ejs");
   mkdirp.sync(config.directory);
   [...tableData.values()].forEach(async (table) => {
     const importManager = new ImportManager();
-    const prep = await ejs.renderFile(fileTemplatePath, table, {
+    const prep = await ejs.renderFile(modelTemplatePath, table, {
       context: importManager,
     });
     const resolveImports = ejs.render(prep, importManager, {
-      context: { dirName: path.join(__dirname, "..", "templates", "partials") },
+      context: { dirName: path.join(templatesRoot, "partials") },
     });
     const fileName = path.join(config.directory, `${table.fileName}.ts`);
     await write(fileName, resolveImports, config);
   });
   const initFile = await ejs.renderFile(
-    path.join(templatesFolder, "init-models.ejs"),
+    path.join(targetLib, "init-models.ejs"),
     { allTables: [...tableData.values()] },
   );
   const initFilePath = path.join(config.directory, "init-models.ts");
