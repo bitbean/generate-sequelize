@@ -35,6 +35,6 @@
     "outDir": "lib",
     "emitDeclarationOnly": true
   },
-  "include": ["src", "scripts"],
+  "include": ["src"],
   "exclude": ["templates", "lib", "bin", "node_modules"]
 }
