@@ -4,7 +4,7 @@ import path from "path";
 import SequelizeAuto from "sequelize-auto";
 import addJoinTables from "./addJoinTables";
 import ejs from "ejs";
-import mkdirp from "mkdirp";
+import * as mkdirp from "mkdirp";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import ImportManager from "./classes/ImportManager";
 import prettier from "prettier";
