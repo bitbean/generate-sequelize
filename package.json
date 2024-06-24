@@ -1,6 +1,6 @@
 {
   "name": "generate-sequelize",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "sequelize code generator for models",
   "bin": {
     "generate-sequelize": "./bin/generate-sequelize"
@@ -20,6 +20,10 @@
     "README.md",
     "templates"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yankiedrebin/generate-sequelize"
+  },
   "author": "",
   "license": "MIT",
   "dependencies": {

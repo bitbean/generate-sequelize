@@ -23,7 +23,7 @@ module.exports = {
     host: "localhost",
     dialect: "mysql",
     directory: "models",
-    joinTables: ["users_roles"],
+    joinTables: ["user_roles"],
     schema: "public",
     replacements: [[/as: "medium"/g, 'as: "media"']],
     prettierOptions: {
@@ -135,11 +135,6 @@ export class users
                 sequelize,
                 indexes: [
                     /* auto-generated indexes */
-                    {
-                        name: 'users_calendly_user_info_key',
-                        unique: true,
-                        fields: ['calendly_user_info'],
-                    },
                     {
                         name: 'users_email_key',
                         unique: true,
@@ -288,11 +283,6 @@ export class users
                 sequelize,
                 indexes: [
                     /* auto-generated indexes */
-                    {
-                        name: 'users_calendly_user_info_key',
-                        unique: true,
-                        fields: ['calendly_user_info'],
-                    },
                     {
                         name: 'users_email_key',
                         unique: true,
