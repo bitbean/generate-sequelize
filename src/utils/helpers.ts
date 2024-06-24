@@ -23,35 +23,3 @@ export function recase(
       return name;
   }
 }
-
-export function replaceRegion(
-  regionName: string,
-  insert: string,
-  file: string,
-) {
-  const regionMarker = `(\\/\\* auto-generated ${regionName} \\*\\/)`;
-  const reg = `${regionMarker}[\\s\\S]*?${regionMarker}`;
-  return file.replace(new RegExp(reg, "g"), (match, p1, p2) => {
-    return `${p1}\n${insert}\n${p2}`;
-  });
-}
-
-export function addImports(imports: ImportsMap): AddImport {
-  return (name, fileName, condition) =>
-    addImport(imports, name, fileName, condition);
-}
-
-export type ImportsMap = Map<string, Set<string>>;
-
-function addImport(
-  imports: ImportsMap,
-  name: string,
-  fileName: string,
-  condition = true,
-) {
-  if (condition)
-    (imports.get(fileName) ||
-      imports.set(fileName, new Set()).get(fileName))!.add(name);
-}
-
-type AddImport = (name: string, fileName: string, condition?: boolean) => void;

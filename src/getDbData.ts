@@ -1,6 +1,6 @@
 import {
   ColumnData,
-  CustomOptions,
+  GeneratorOptions,
   DBData,
   ReferenceData,
   RelationData,
@@ -13,7 +13,7 @@ import { IndexesOptions, ModelAttributeColumnOptions } from "sequelize";
 
 export default function getTableData(
   tableData: TData,
-  options: CustomOptions,
+  options: GeneratorOptions,
 ): DBData {
   const db: DBData = new Map();
   Object.entries(tableData.tables).forEach(([key, table]) => {

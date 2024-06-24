@@ -1,19 +1,64 @@
-import type { ModelAttributeColumnOptions, IndexesOptions } from "sequelize";
-import type { AutoOptions } from "sequelize-auto/types";
+import type {
+  ModelAttributeColumnOptions,
+  IndexesOptions,
+  Dialect,
+} from "sequelize";
+import type { CaseFileOption, CaseOption } from "sequelize-auto/types";
 import type { Options } from "prettier";
-export interface CustomOptions
-  extends Omit<
-    AutoOptions,
-    | "additional"
-    | "closeConnectionAutomatically"
-    | "indentation"
-    | "lang"
-    | "noIndexes"
-  > {
+
+export interface GeneratorOptions {
+  /** Case of file names (default original)*/
+  caseFile?: CaseFileOption;
+  /** Case of model names (default original)*/
+  caseModel?: CaseOption;
+  /** Case of property names (default original)*/
+  caseProp?: CaseOption;
+  /** Database name */
+  database?: string;
+  /** Database dialect */
+  dialect: Dialect;
+  /** Dialect-specific options */
+  dialectOptions?: {
+    options?: any;
+  };
+  /** Where to write the model files */
+  directory: string;
+  /** Database host (default localhost)*/
+  host?: string;
+  /** Whether to avoid creating alias property in relations */
+  noAlias?: boolean;
+  /** Whether to skip writing the init-models file */
+  noInitModels?: boolean;
+  /** Database password */
+  password?: string;
+  /** Database port (default mysql: 3306, postgres: 5432, mssql: 1433)*/
+  port?: number;
+  /** Database schema to export */
+  schema?: string;
+  /** Whether to singularize model names (default false)*/
+  singularize?: boolean;
+  /** Tables to skip exporting */
+  skipTables?: string[];
+  /** Fields to skip exporting */
+  skipFields?: string[];
+  /** File where database is stored (sqlite only) */
+  storage?: string;
+  /** Tables to export (default all) */
+  tables?: string[];
+  /** Database username */
+  username?: string;
+  /** Whether to export views (default false) */
+  views?: boolean;
+  /** Primary Key Suffixes to trim (default "id") */
+  pkSuffixes?: string[];
+  /** Library that output files to be written using (default sequelize)*/
   targetLib?: "sequelize" | "sequelize-typescript" | "@sequelize/core";
+  /** Array of replacements to be applied after formatting across all files using file.replace(replacement[0], replacement[1]) */
   replacements?: [RegExp, string][];
+  /** Array of tables to be considered as join tables. All foreign keys in these tables will be related to each other via belongsToMany relationship */
   joinTables?: string[];
-  prettierOptions?: Options;
+  /** After the files are processed, prettier will be run to format each file before it is written. Use this option to configure prettier formatting to reflect your prettier config. (default is prettier default options) */
+  prettierOptions?: Omit<Options, "parser" | "semi">;
 }
 
 export type ReferenceData = {

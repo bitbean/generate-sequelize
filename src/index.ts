@@ -1,4 +1,4 @@
-import { CustomOptions } from "./types";
+import { GeneratorOptions } from "./types";
 import getTableData from "./getDbData";
 import path from "path";
 import SequelizeAuto from "sequelize-auto";
@@ -15,16 +15,20 @@ export async function main() {
     process.argv[2] ?? ".generate-sequelize.cjs",
   );
   console.log(configPath, "PATH FROM:", process.argv.length, process.argv);
-  const config = (await import(configPath)).default as CustomOptions;
+  const config = (await import(configPath)).default as GeneratorOptions;
   const {
     joinTables,
-    username,
-    password,
-    database,
+    username = "",
+    password = "",
+    database = "",
     targetLib = "sequelize",
     ...rest
   } = config;
-  const auto = new SequelizeAuto(database!, username!, password!, rest);
+  const auto = new SequelizeAuto(database, username, password, {
+    ...rest,
+    useDefine: false,
+    singularize: !!rest.singularize,
+  });
   const td = auto.relate(await auto.build());
   const tableData = getTableData(td, config);
 
@@ -45,12 +49,14 @@ export async function main() {
     const fileName = path.join(config.directory, `${table.fileName}.ts`);
     await write(fileName, resolveImports, config);
   });
-  const initFile = await ejs.renderFile(
-    path.join(targetLibTemplateDir, "init-models.ejs"),
-    { allTables: [...tableData.values()] },
-  );
-  const initFilePath = path.join(config.directory, "init-models.ts");
-  await write(initFilePath, initFile, config);
+  if (!config.noInitModels) {
+    const initFile = await ejs.renderFile(
+      path.join(targetLibTemplateDir, "init-models.ejs"),
+      { allTables: [...tableData.values()] },
+    );
+    const initFilePath = path.join(config.directory, "init-models.ts");
+    await write(initFilePath, initFile, config);
+  }
 }
 
 function replaceRegions(filePath: string, templateFile: string) {
@@ -74,14 +80,13 @@ function replaceRegions(filePath: string, templateFile: string) {
 async function write(
   filePath: string,
   templateFile: string,
-  config: CustomOptions,
+  config: GeneratorOptions,
 ) {
   templateFile = replaceRegions(filePath, templateFile);
   templateFile = await prettier.format(templateFile, {
     ...config.prettierOptions,
     parser: "typescript",
     semi: true,
-    trailingComma: "all",
   });
   if (config.replacements) {
     config.replacements.forEach(([pattern, replacement]) => {
