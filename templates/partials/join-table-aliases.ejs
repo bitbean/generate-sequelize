@@ -1,0 +1,13 @@
+<% const joinTableAliases = new Map() -%>
+<% [...allTables].forEach(({ relations }) => { -%>
+<% [...relations.values()].forEach(relation => { -%>
+<% if (relation.type === 'belongsToMany' && relation.through !== relation.throughAlias) { joinTableAliases.set(relation.through, relation.throughAlias) } -%>
+<% }) -%>
+<% }) -%>
+<% [...joinTableAliases.entries()].forEach(([orig, sing]) => { -%>
+<% if (isSequelizeBasic) { -%>
+(class <%- sing %> extends <%- orig %> {}).initModel(sequelize);
+<% } else { -%>
+class <%- sing %> extends <%= orig %> {},
+<% } -%>
+<% }) -%>

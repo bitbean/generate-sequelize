@@ -10,9 +10,7 @@ export default function initModels(sequelize: Sequelize) {
 <% allTables.forEach(({ modelName }) => { -%>
 <%= modelName %>.initModel(sequelize);
 <% }) -%>
-<% joinTableAliases.forEach(([orig, sing]) => { -%>
-(class <%- sing %> extends <%- orig %> {}).initModel(sequelize);
-<% }) -%>
+<%- include('../partials/join-table-aliases.ejs', { allTables, isSequelizeBasic: true }) -%>
 /* auto-generated inits */
 
 /* auto-generated associations */

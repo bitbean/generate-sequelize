@@ -11,9 +11,7 @@ sequelize.addModels([
 <% allTables.forEach(({ modelName }) => { -%>
 <%= modelName %>,
 <% }) -%>
-<% joinTableAliases.forEach(([orig, sing]) => { -%>
-class <%- sing %> extends <%= orig %> {},
-<% }) -%>
+<%- include('./join-table-aliases.ejs', { allTables, isSequelizeBasic: false }) -%>
 /* auto-generated inits */
 ]);
 }
