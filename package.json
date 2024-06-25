@@ -1,6 +1,6 @@
 {
   "name": "generate-sequelize",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "sequelize code generator for models",
   "bin": {
     "generate-sequelize": "./bin/generate-sequelize"
