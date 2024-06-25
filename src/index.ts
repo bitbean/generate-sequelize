@@ -8,7 +8,6 @@ import * as mkdirp from "mkdirp";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import ImportManager from "./classes/ImportManager";
 import prettier from "prettier";
-import { Utils } from "sequelize";
 
 export async function main() {
   const configPath = path.join(
@@ -55,9 +54,6 @@ export async function main() {
       path.join(targetLibTemplateDir, "init-models.ejs"),
       {
         allTables: [...tableData.values()],
-        joinTableAliases: (joinTables || [])
-          .map((jt) => [jt, Utils.singularize(jt)])
-          .filter(([orig, sing]) => orig !== sing),
       },
     );
     const initFilePath = path.join(config.directory, "init-models.ts");
