@@ -21,6 +21,7 @@ export default function addJoinTables(tableData: DBData, joinTables: string[]) {
           targetTableName: other.targetTableName,
           targetFileName: other.targetFileName,
           through: table.modelName,
+          throughAlias: Utils.singularize(table.modelName),
           throughFileName: table.fileName,
         };
         targetTable.relations.set(Utils.pluralize(otherName), m2m);

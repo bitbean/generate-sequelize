@@ -94,6 +94,7 @@ type RelMeta =
   | {
       type: "belongsToMany";
       through: string;
+      throughAlias: string;
       throughFileName: string;
       otherKey: string;
     };
