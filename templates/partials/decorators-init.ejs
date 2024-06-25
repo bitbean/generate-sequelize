@@ -1,0 +1,25 @@
+/* auto-generated imports */
+<% allTables.forEach(({ fileName, modelName }) => { -%>
+import { <%= modelName %> } from './<%= fileName %>';
+<% }) -%>
+/* auto-generated imports */
+import { Sequelize } from "<%- targetLib %>";
+
+export default function initModels(sequelize: Sequelize) {
+sequelize.addModels([
+/* auto-generated inits */
+<% allTables.forEach(({ modelName }) => { -%>
+<%= modelName %>,
+<% }) -%>
+<% joinTableAliases.forEach(([orig, sing]) => { -%>
+class <%- sing %> extends <%= orig %> {},
+<% }) -%>
+/* auto-generated inits */
+]);
+}
+
+/* auto-generated exports */
+<% allTables.forEach(({ fileName }) => { -%>
+export * from './<%= fileName %>';
+<% }) -%>
+/* auto-generated exports */

@@ -62,13 +62,13 @@ import {
     /* auto-generated properties */
 
     /* auto-generated associations */
-    <% [...relations.entries()].sort(([,a], [,b]) => a.type === b.type ? 0 : a.type === "belongsToMany" ? -1 : b.type === 'belongsToMany' ? 1 : 0).forEach(([name, rel], i, arr) => { -%>
+    <% [...relations.entries()].forEach(([name, rel], i, arr) => { -%>
     <% const relType = rel.type[0].toUpperCase() + rel.type.slice(1) -%>
     <% this.seqImports.add(relType) -%>
     <% this.addImport(`./${rel.targetFileName}`, rel.targetName) -%>
     <% if (relType === "BelongsToMany") { -%>
     <% this.addImport(`./${rel.throughFileName}`, rel.through) -%>
-    @BelongsToMany(() => <%- rel.targetName %>, () => <%- rel.through %>, "<%- rel.foreignKey %>", "<%- rel.otherKey %>")
+    @BelongsToMany(() => <%- rel.targetName %>, "<%- rel.throughAlias %>", "<%- rel.foreignKey %>", "<%- rel.otherKey %>")
     <% } else { -%>
     @<%- relType %>(() => <%- rel.targetName %>, "<%- rel.foreignKey %>")
     <% } -%>

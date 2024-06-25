@@ -38,6 +38,7 @@
     /* auto-generated associations */
     <% [...relations.entries()].forEach(([name, rel]) => { -%>
     <% this.addImport(`./${rel.targetFileName}`, rel.targetName) -%>
+    <% if (rel.type === 'belongsToMany') { this.addImport(`./${rel.throughFileName}`, rel.through) } -%>
     <%- include("../partials/association-prop.ejs", { name, ...rel, optional: !!rel.optional }) -%>
     <% }) %>
     /* auto-generated associations */

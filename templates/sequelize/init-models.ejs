@@ -10,24 +10,21 @@ export default function initModels(sequelize: Sequelize) {
 <% allTables.forEach(({ modelName }) => { -%>
 <%= modelName %>.initModel(sequelize);
 <% }) -%>
+<% joinTableAliases.forEach(([orig, sing]) => { -%>
+(class <%- sing %> extends <%- orig %> {}).initModel(sequelize);
+<% }) -%>
 /* auto-generated inits */
 
 /* auto-generated associations */
 <% allTables.forEach(table => { -%>
-<% [...table.relations.entries()].filter(([, rel]) => rel.type === 'belongsToMany').forEach(([name, relation]) => { -%>
+<% [...table.relations.entries()].forEach(([name, relation]) => { -%>
 <%- table.modelName %>.<%- relation.type %>(<%- relation.targetName %>, {
-as: '<%= name %>',
-foreignKey: '<%= relation.foreignKey %>',
-through: <%= relation.through %>,
-otherKey: '<%= relation.otherKey %>',
-});
-<% }) -%>
-<% }) -%>
-<% allTables.forEach(table => { -%>
-<% [...table.relations.entries()].filter(([, rel]) => rel.type !== 'belongsToMany').forEach(([name, relation]) => { -%>
-<%- table.modelName %>.<%- relation.type %>(<%- relation.targetName %>, {
-as: '<%= name %>',
-foreignKey: '<%= relation.foreignKey %>',
+as: "<%- name %>",
+foreignKey: "<%- relation.foreignKey %>",
+<% if (relation.type === 'belongsToMany') { -%>
+through: "<%- relation.throughAlias %>",
+otherKey: "<%- relation.otherKey %>",
+<% } -%>
 });
 <% }) -%>
 <% }) -%>

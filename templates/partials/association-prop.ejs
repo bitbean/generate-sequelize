@@ -1,1 +1,1 @@
-<%- include("./property.ejs", { name, allowNull: !!optional, tsType: `${targetName}${type === 'hasMany' || type === 'belongsToMany' ? '[]' : ''}` }) %>
+<%- include("./property.ejs", { name, allowNull: !!optional, tsType: type === 'belongsToMany' ? `(${targetName} & { ${throughAlias}: ${through} })[]` : `${targetName}${type === 'hasMany' ? '[]' : ''}` }) %>
