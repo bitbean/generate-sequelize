@@ -12,7 +12,10 @@
     "build": "run-s clean build-es build-ts",
     "build-es": "tsx scripts/esbuild.ts",
     "build-ts": "tsc",
-    "test": "echo 'Sorry, no tests!'"
+    "test-sequelize": "./bin/generate-sequelize test/sequelize-config.cjs",
+    "test-sequelize-ts": "./bin/generate-sequelize test/sequelize-ts-config.cjs",
+    "test-sequelize-core": "./bin/generate-sequelize test/sequelize-core-config.cjs",
+    "test": "run-s test-sequelize test-sequelize-ts test-sequelize-core"
   },
   "files": [
     "lib",
