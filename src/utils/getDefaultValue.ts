@@ -45,7 +45,7 @@ export default function getDefaultValue(
   if (tsType === "number" && !isNaN(Number(defaultValue))) {
     return Number(defaultValue);
   }
-  if (tsType === "Date") {
+  if (tsType.includes("Date")) {
     if (defaultValue === "CURRENT_TIMESTAMP") {
       return "DataTypes.NOW";
     }
