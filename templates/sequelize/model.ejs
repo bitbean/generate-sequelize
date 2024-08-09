@@ -56,7 +56,7 @@
     <% if (field) { -%>
     field: "<%- field %>",
     <% } -%>
-    <% if (defaultValue) { -%>
+    <% if (defaultValue !== undefined && defaultValue !== null) { -%>
     <% if (typeof defaultValue === "string" && defaultValue.startsWith("fn")) { this.addImport("sequelize", "fn") } -%>
     <% if (typeof defaultValue === "string" && defaultValue.startsWith("literal")) { this.addImport("sequelize", "literal") } -%>
     defaultValue: <%- defaultValue %>,
