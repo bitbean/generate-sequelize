@@ -20,7 +20,7 @@
 
     export type <%- modelName %>OptionalAttributes =
     /* auto-generated optional attributes */
-    <%- include("../partials/keys.ejs", { keys: [...columns.values()].filter(c => !c.definition.allowNull && (c.definition.defaultValue || c.definition.autoIncrement)).map(c => c.name) }) -%>
+    <%- include("../partials/keys.ejs", { keys: [...columns.values()].filter(c => !c.definition.allowNull && ((c.definition.defaultValue !== undefined && c.definition.defaultValue !== null) || c.definition.autoIncrement)).map(c => c.name) }) -%>
     /* auto-generated optional attributes */
 
     export type <%- modelName %>CreationAttributes = Optional<%- "<" %><%- modelName %>Attributes, <%- modelName %>OptionalAttributes>;
