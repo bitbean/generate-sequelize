@@ -1,4 +1,4 @@
-import type {
+import {
   ModelAttributeColumnOptions,
   IndexesOptions,
   Dialect,
@@ -7,6 +7,8 @@ import type { CaseFileOption, CaseOption } from "sequelize-auto/types";
 import type { Options } from "prettier";
 
 export interface GeneratorOptions {
+  /** Add null to nullable fields (ex: column?: string | null;) */
+  addNullToTypes?: boolean;
   /** Case of file names (default original)*/
   caseFile?: CaseFileOption;
   /** Case of model names (default original)*/

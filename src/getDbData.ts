@@ -39,7 +39,9 @@ export default function getTableData(
         autoIncrement || !!(primaryKey && defaultValue) ? true : undefined;
       const unique = getUnique(field, tableData.indexes?.[key]);
       const typeStr = getDataType(type, special, elementType);
-      const tsType = getTsType(type, special, elementType);
+      const tsType =
+        getTsType(type, special, elementType) +
+        (options.addNullToTypes && allowNull ? " | null" : "");
       const defaultVal = autoI
         ? undefined
         : getDefaultValue(defaultValue, tsType, typeStr);
@@ -140,7 +142,7 @@ export default function getTableData(
       targetTableName: childTableName,
       targetName: childModel,
       type: isOne ? "hasOne" : "hasMany",
-      optional: isOne && optional,
+      optional: isOne,
     };
     const childRelData: RelationData = {
       foreignKey: parentId,
