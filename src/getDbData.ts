@@ -16,101 +16,107 @@ export default function getTableData(
   options: GeneratorOptions,
 ): DBData {
   const db: DBData = new Map();
-  Object.entries(tableData.tables).forEach(([key, table]) => {
-    if (key.toLowerCase().includes("sequelizemeta")) return;
-    const split = key.split(".");
-    const [schema, tableName] =
-      split.length > 1 ? split : [undefined, split[0]!];
-    const modelName = recase(tableName, options.caseModel, options.singularize);
-    const fileName = recase(tableName, options.caseFile, options.singularize);
-    const columnsData: TableData["columns"] = new Map();
-    Object.entries(table).forEach(([field, col]) => {
-      const {
-        allowNull,
-        autoIncrement,
-        comment,
-        defaultValue,
-        elementType,
-        primaryKey,
-        special,
-        type,
-      } = col as TSField;
-      const autoI =
-        autoIncrement || !!(primaryKey && defaultValue) ? true : undefined;
-      const unique = getUnique(field, tableData.indexes?.[key]);
-      const typeStr = getDataType(type, special, elementType);
-      const tsType =
-        getTsType(type, special, elementType) +
-        (options.addNullToTypes && allowNull ? " | null" : "");
-      const defaultVal = autoI
-        ? undefined
-        : getDefaultValue(defaultValue, tsType, typeStr);
-      const fk = getFk(field, tableData?.foreignKeys?.[key]);
-      const references = fk
-        ? {
-            model: fk.foreignSources.target_table,
-            key: fk.foreignSources.target_column,
-          }
-        : undefined;
-      const refData: ReferenceData | undefined = references
-        ? {
-            modelName: recase(references.model!, options.caseModel),
-            key: references.key!,
-            tableName: references.model!,
-            fileName: recase(references.model!, options.caseFile),
-          }
-        : undefined;
-      const name = recase(field, options.caseProp);
-      const definition: ModelAttributeColumnOptions = {
-        type: typeStr,
-        allowNull: !!allowNull,
-        defaultValue: defaultVal,
-        autoIncrement: autoI,
-        comment: comment ?? undefined,
-        field: name === field ? undefined : field,
-        primaryKey: primaryKey || undefined,
-        unique,
-        references,
-      };
-      const colData: ColumnData = {
-        definition,
-        field,
-        name,
+  Object.entries(tableData.tables)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .forEach(([key, table]) => {
+      if (key.toLowerCase().includes("sequelizemeta")) return;
+      const split = key.split(".");
+      const [schema, tableName] =
+        split.length > 1 ? split : [undefined, split[0]!];
+      const modelName = recase(
         tableName,
-        tableModelName: modelName,
-        tsType,
-        refData,
+        options.caseModel,
+        options.singularize,
+      );
+      const fileName = recase(tableName, options.caseFile, options.singularize);
+      const columnsData: TableData["columns"] = new Map();
+      Object.entries(table).forEach(([field, col]) => {
+        const {
+          allowNull,
+          autoIncrement,
+          comment,
+          defaultValue,
+          elementType,
+          primaryKey,
+          special,
+          type,
+        } = col as TSField;
+        const autoI =
+          autoIncrement || !!(primaryKey && defaultValue) ? true : undefined;
+        const unique = getUnique(field, tableData.indexes?.[key]);
+        const typeStr = getDataType(type, special, elementType);
+        const tsType =
+          getTsType(type, special, elementType) +
+          (options.addNullToTypes && allowNull ? " | null" : "");
+        const defaultVal = autoI
+          ? undefined
+          : getDefaultValue(defaultValue, tsType, typeStr);
+        const fk = getFk(field, tableData?.foreignKeys?.[key]);
+        const references = fk
+          ? {
+              model: fk.foreignSources.target_table,
+              key: fk.foreignSources.target_column,
+            }
+          : undefined;
+        const refData: ReferenceData | undefined = references
+          ? {
+              modelName: recase(references.model!, options.caseModel),
+              key: references.key!,
+              tableName: references.model!,
+              fileName: recase(references.model!, options.caseFile),
+            }
+          : undefined;
+        const name = recase(field, options.caseProp);
+        const definition: ModelAttributeColumnOptions = {
+          type: typeStr,
+          allowNull: !!allowNull,
+          defaultValue: defaultVal,
+          autoIncrement: autoI,
+          comment: comment ?? undefined,
+          field: name === field ? undefined : field,
+          primaryKey: primaryKey || undefined,
+          unique,
+          references,
+        };
+        const colData: ColumnData = {
+          definition,
+          field,
+          name,
+          tableName,
+          tableModelName: modelName,
+          tsType,
+          refData,
+        };
+        columnsData.set(field, colData);
+      });
+      const td: TableData = {
+        columns: columnsData,
+        fileName,
+        modelName,
+        relations: new Map(),
+        schema,
+        tableName,
+        indexes: [],
       };
-      columnsData.set(field, colData);
-    });
-    const td: TableData = {
-      columns: columnsData,
-      fileName,
-      modelName,
-      relations: new Map(),
-      schema,
-      tableName,
-      indexes: [],
-    };
 
-    tableData.indexes[key]?.forEach((index) => {
-      const indData: IndexesOptions = {
-        name: index.name,
-        unique: index.unique || undefined,
-        using: index.type,
-        fields: index.fields.map(({ order, attribute }) =>
-          order === "ASC" || order === "DESC"
-            ? {
-                name: attribute,
-                order,
-              }
-            : attribute,
-        ),
-      };
-      td.indexes.push(indData);
+      tableData.indexes[key]?.forEach((index) => {
+        const indData: IndexesOptions = {
+          name: index.name,
+          unique: index.unique || undefined,
+          using: index.type,
+          fields: index.fields.map(({ order, attribute }) =>
+            order === "ASC" || order === "DESC"
+              ? {
+                  name: attribute,
+                  order,
+                }
+              : attribute,
+          ),
+        };
+        td.indexes.push(indData);
+      });
+      db.set(tableName, td);
     });
-    db.set(tableName, td);
-  });
 
   tableData.relations.forEach((rel) => {
     const {

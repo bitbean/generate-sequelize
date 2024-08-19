@@ -53,7 +53,9 @@ export async function main() {
     const initFile = await ejs.renderFile(
       path.join(targetLibTemplateDir, "init-models.ejs"),
       {
-        allTables: [...tableData.values()],
+        allTables: [...tableData.values()].sort((a, b) =>
+          a.fileName.localeCompare(b.fileName),
+        ),
       },
     );
     const initFilePath = path.join(config.directory, "init-models.ts");
