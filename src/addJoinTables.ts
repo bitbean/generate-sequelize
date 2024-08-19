@@ -1,12 +1,23 @@
 import { Utils } from "sequelize";
-import { DBData, RelationData } from "./types";
+import { DBData, RelationData, JoinTables } from "./types";
 
-export default function addJoinTables(tableData: DBData, joinTables: string[]) {
-  joinTables.forEach((tableName) => {
+export default function addJoinTables(
+  tableData: DBData,
+  joinTables: JoinTables,
+) {
+  const jt: [string, string[] | true][] = Array.isArray(joinTables)
+    ? joinTables.map((t) => [t, true])
+    : Object.entries(joinTables).map(([tableName, trueOrFields]) => [
+        tableName,
+        trueOrFields,
+      ]);
+  jt.forEach(([tableName, trueOrFields]) => {
     const table = tableData.get(tableName)!;
     const { relations } = table;
     const belongTos = [...relations.entries()].filter(
-      ([, r]) => r.type === "belongsTo",
+      ([, r]) =>
+        r.type === "belongsTo" &&
+        (trueOrFields === true || trueOrFields.includes(r.foreignKey)),
     );
     belongTos.forEach(([name, r]) => {
       const { targetTableName, foreignKey } = r;

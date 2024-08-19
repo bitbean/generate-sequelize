@@ -6,6 +6,8 @@ import {
 import type { CaseFileOption, CaseOption } from "sequelize-auto/types";
 import type { Options } from "prettier";
 
+export type JoinTables = string[] | Record<string, true | string[]>;
+
 export interface GeneratorOptions {
   /** Add null to nullable fields (ex: column?: string | null;) */
   addNullToTypes?: boolean;
@@ -57,8 +59,8 @@ export interface GeneratorOptions {
   targetLib?: "sequelize" | "sequelize-typescript" | "@sequelize/core";
   /** Array of replacements to be applied after formatting across all files using file.replace(replacement[0], replacement[1]) */
   replacements?: [RegExp, string][];
-  /** Array of tables to be considered as join tables. All foreign keys in these tables will be related to each other via belongsToMany relationship */
-  joinTables?: string[];
+  /** Array of tables to be considered as join tables. All foreign keys in these tables will be related to each other via belongsToMany relationship (can also be a record or table names as keys. the value can be either true for all foreign keys or an array of foreign keys)*/
+  joinTables?: JoinTables;
   /** After the files are processed, prettier will be run to format each file before it is written. Use this option to configure prettier formatting to reflect your prettier config. (default is prettier default options) */
   prettierOptions?: Omit<Options, "parser" | "semi">;
 }
