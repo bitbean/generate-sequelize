@@ -6,7 +6,9 @@ import {
 import type { CaseFileOption, CaseOption } from "sequelize-auto/types";
 import type { Options } from "prettier";
 
-export type JoinTables = string[] | Record<string, true | string[]>;
+export type JoinTables =
+  | string[]
+  | Record<string, true | string[] | string[][]>;
 
 export interface GeneratorOptions {
   /** Add null to nullable fields (ex: column?: string | null;) */

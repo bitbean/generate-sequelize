@@ -5,7 +5,7 @@ export default function addJoinTables(
   tableData: DBData,
   joinTables: JoinTables,
 ) {
-  const jt: [string, string[] | true][] = Array.isArray(joinTables)
+  const jt: [string, string[] | true | string[][]][] = Array.isArray(joinTables)
     ? joinTables.map((t) => [t, true])
     : Object.entries(joinTables).map(([tableName, trueOrFields]) => [
         tableName,
@@ -17,13 +17,23 @@ export default function addJoinTables(
     const belongTos = [...relations.entries()].filter(
       ([, r]) =>
         r.type === "belongsTo" &&
-        (trueOrFields === true || trueOrFields.includes(r.foreignKey)),
+        (trueOrFields === true || trueOrFields.flat().includes(r.foreignKey)),
     );
     belongTos.forEach(([name, r]) => {
       const { targetTableName, foreignKey } = r;
       const targetTable = tableData.get(targetTableName)!;
       belongTos.forEach(([otherName, other]) => {
         if (name === otherName) return;
+        if (
+          Array.isArray(trueOrFields) &&
+          !trueOrFields.find(
+            (f) =>
+              typeof f === "string" ||
+              (f.includes(foreignKey) && f.includes(other.foreignKey)),
+          )
+        ) {
+          return;
+        }
         const m2m: RelationData = {
           foreignKey,
           type: "belongsToMany",
@@ -40,3 +50,5 @@ export default function addJoinTables(
     });
   });
 }
+
+// [task_id, media_id], [chat_id, media_id]

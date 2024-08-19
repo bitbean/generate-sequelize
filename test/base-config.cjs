@@ -17,7 +17,10 @@ module.exports = {
   joinTables: {
     user_roles: ["user_id", "org_id", "role_id"],
     session_tasks: true,
-    task_media: ["task_id", "media_id"],
+    task_media: [
+      ["task_id", "media_id"],
+      ["chat_id", "media_id"],
+    ],
     slack_users_channels: true,
   },
 };
