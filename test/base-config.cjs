@@ -14,10 +14,10 @@ module.exports = {
   directory: "src/models",
   schema: "public",
   replacements: [[/as: "medium"/g, 'as: "media"']],
-  joinTables: [
-    "user_roles",
-    "session_tasks",
-    "slack_users_channels",
-    "task_watchers",
-  ],
+  joinTables: {
+    user_roles: ["user_id", "org_id", "role_id"],
+    session_tasks: true,
+    task_media: ["task_id", "media_id"],
+    slack_users_channels: true,
+  },
 };
