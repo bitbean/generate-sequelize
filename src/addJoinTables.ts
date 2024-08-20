@@ -4,6 +4,7 @@ import { DBData, RelationData, JoinTables } from "./types";
 export default function addJoinTables(
   tableData: DBData,
   joinTables: JoinTables,
+  joinTableRenames: Record<string, Record<string, string>>,
 ) {
   const jt: [string, string[] | true | string[][]][] = Array.isArray(joinTables)
     ? joinTables.map((t) => [t, true])
@@ -34,16 +35,7 @@ export default function addJoinTables(
         ) {
           return;
         }
-        if (targetTable.relations.has(Utils.pluralize(otherName))) {
-          console.warn(
-            'skipping join table "' +
-              otherName +
-              '" for table "' +
-              name +
-              '" because it already exists',
-          );
-          return;
-        }
+
         const m2m: RelationData = {
           foreignKey,
           type: "belongsToMany",
@@ -55,7 +47,19 @@ export default function addJoinTables(
           throughAlias: Utils.singularize(table.modelName),
           throughFileName: table.fileName,
         };
-        targetTable.relations.set(Utils.pluralize(otherName), m2m);
+        const propName =
+          joinTableRenames[tableName]?.[other.foreignKey] ||
+          Utils.pluralize(otherName);
+        if (targetTable.relations.has(propName)) {
+          console.warn(
+            'overwriting join m2m "' +
+              propName +
+              '" for table "' +
+              name +
+              '" because it already exists',
+          );
+        }
+        targetTable.relations.set(propName, m2m);
       });
     });
   });

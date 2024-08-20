@@ -22,6 +22,7 @@ export async function main() {
     password = "",
     database = "",
     targetLib = "sequelize",
+    joinTableRenames = {},
     ...rest
   } = config;
   const auto = new SequelizeAuto(database, username, password, {
@@ -32,7 +33,7 @@ export async function main() {
   const td = auto.relate(await auto.build());
   const tableData = getTableData(td, config);
 
-  joinTables && addJoinTables(tableData, joinTables);
+  joinTables && addJoinTables(tableData, joinTables, joinTableRenames);
 
   const templatesRoot = path.join(__dirname, "..", "templates");
   const targetLibTemplateDir = path.join(templatesRoot, targetLib);

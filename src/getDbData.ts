@@ -162,8 +162,15 @@ export default function getTableData(
       type: "belongsTo",
       optional: optional,
     };
-    childData.relations.set(parentProp, childRelData);
-    db.get(parentTableName)!.relations.set(childProp, parentData);
+    childData.relations.set(
+      options.relationRenames?.[childData.tableName]?.[parentProp] ||
+        parentProp,
+      childRelData,
+    );
+    db.get(parentTableName)!.relations.set(
+      options.relationRenames?.[parentTableName]?.[childProp] || childProp,
+      parentData,
+    );
   });
 
   return db;

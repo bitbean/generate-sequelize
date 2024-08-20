@@ -65,6 +65,10 @@ export interface GeneratorOptions {
   joinTables?: JoinTables;
   /** After the files are processed, prettier will be run to format each file before it is written. Use this option to configure prettier formatting to reflect your prettier config. (default is prettier default options) */
   prettierOptions?: Omit<Options, "parser" | "semi">;
+  /** rename relations. example: { users: { tasks: "assigned_to_tasks" } } */
+  relationRenames?: Record<string, Record<string, string>>;
+  /** map renaming for join tables. use foreign key as rewrite target. example: { user_roles: { user_id: "admin" } } */
+  joinTableRenames?: Record<string, Record<string, string>>;
 }
 
 export type ReferenceData = {
