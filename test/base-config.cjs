@@ -22,5 +22,16 @@ module.exports = {
       ["chat_id", "media_id"],
     ],
     slack_users_channels: true,
+    task_watchers: true,
+  },
+  relationRenames: {
+    organizations: {
+      users: "default_org_users",
+    },
+  },
+  joinTableRenames: {
+    task_watchers: {
+      user_id: "watchers",
+    },
   },
 };
