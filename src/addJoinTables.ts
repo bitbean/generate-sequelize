@@ -34,6 +34,16 @@ export default function addJoinTables(
         ) {
           return;
         }
+        if (targetTable.relations.has(Utils.pluralize(otherName))) {
+          console.warn(
+            'skipping join table "' +
+              otherName +
+              '" for table "' +
+              name +
+              '" because it already exists',
+          );
+          return;
+        }
         const m2m: RelationData = {
           foreignKey,
           type: "belongsToMany",
