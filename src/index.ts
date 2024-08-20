@@ -43,6 +43,7 @@ export async function main() {
     const prep = await ejs.renderFile(modelTemplatePath, table, {
       context: importManager,
     });
+    importManager.imports.delete(`./${table.fileName}`);
     const resolveImports = ejs.render(prep, importManager, {
       context: { dirName: path.join(templatesRoot, "partials") },
     });
