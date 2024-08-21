@@ -59,8 +59,13 @@ export interface GeneratorOptions {
   pkSuffixes?: string[];
   /** Library that output files to be written using (default sequelize)*/
   targetLib?: "sequelize" | "sequelize-typescript" | "@sequelize/core";
-  /** Array of replacements to be applied after formatting across all files using file.replace(replacement[0], replacement[1]) */
-  replacements?: [RegExp, string][];
+  /** Array of replacements to be applied after formatting across all files using file.replace(replacement[0], replacement[1]). replacement[2] can be a list of tables (or init-models) to apply to, replacement[3] can be a list of tables to exclude*/
+  replacements?: [
+    pattern: RegExp,
+    replacement: string,
+    tables?: string[] | undefined,
+    excludeTables?: string[],
+  ][];
   /** Array of tables to be considered as join tables. All foreign keys in these tables will be related to each other via belongsToMany relationship (can also be a record or table names as keys. the value can be either true for all foreign keys, an array of foreign keys, or an array of array of foreign keys to establish specific relationships)*/
   joinTables?: JoinTables;
   /** After the files are processed, prettier will be run to format each file before it is written. Use this option to configure prettier formatting to reflect your prettier config. (default is prettier default options) */

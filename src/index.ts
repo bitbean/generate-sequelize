@@ -49,7 +49,7 @@ export async function main() {
       context: { dirName: path.join(templatesRoot, "partials") },
     });
     const fileName = path.join(config.directory, `${table.fileName}.ts`);
-    await write(fileName, resolveImports, config);
+    await write(fileName, resolveImports, config, table.tableName);
   });
   if (!config.noInitModels) {
     const initFile = await ejs.renderFile(
@@ -61,7 +61,7 @@ export async function main() {
       },
     );
     const initFilePath = path.join(config.directory, "init-models.ts");
-    await write(initFilePath, initFile, config);
+    await write(initFilePath, initFile, config, "init-models");
   }
 }
 
@@ -87,6 +87,7 @@ async function write(
   filePath: string,
   templateFile: string,
   config: GeneratorOptions,
+  tableName: string,
 ) {
   templateFile = replaceRegions(filePath, templateFile);
   templateFile = await prettier.format(templateFile, {
@@ -95,9 +96,15 @@ async function write(
     semi: true,
   });
   if (config.replacements) {
-    config.replacements.forEach(([pattern, replacement]) => {
-      templateFile = templateFile.replace(pattern, replacement);
-    });
+    config.replacements.forEach(
+      ([pattern, replacement, tables, excludeTables]) => {
+        if (!tables || tables.includes(tableName)) {
+          if (!excludeTables?.includes(tableName)) {
+            templateFile = templateFile.replace(pattern, replacement);
+          }
+        }
+      },
+    );
   }
   writeFileSync(filePath, templateFile);
 }
