@@ -25,9 +25,7 @@ import {
     export type <%- modelName %>CreationAttributes = Optional<%- "<" %><%- modelName %>Attributes, <%- modelName %>OptionalAttributes>;
 
     @Table({
-    <% if (modelName !== tableName) { -%>
     tableName: "<%- tableName %>",
-    <% } -%>
     indexes: [
     /* auto-generated indexes */
     <% indexes.forEach(index => { -%>

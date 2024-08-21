@@ -70,9 +70,7 @@
     },
     {
     sequelize,
-    <% if (modelName !== tableName) { -%>
     tableName: "<%- tableName %>",
-    <% } -%>
     indexes: [
     /* auto-generated indexes */
     <% indexes.forEach(index => { -%>

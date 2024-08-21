@@ -19,9 +19,7 @@ import {
     /* auto-generated optional attributes */
     export type <%- modelName %>CreationAttributes = Omit<%- "<" %><%- modelName %>Attributes, <%- modelName %>OptionalAttributes> & Partial<%- "<" %>Pick<%- "<" %><%- modelName %>Attributes, <%- modelName %>OptionalAttributes>>;
     @Table({
-    <% if (modelName !== tableName) { -%>
     tableName: "<%- tableName %>",
-    <% } -%>
     indexes: [
     /* auto-generated indexes */
     <% indexes.forEach(index => { -%>
