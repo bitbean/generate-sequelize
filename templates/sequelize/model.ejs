@@ -44,7 +44,7 @@
     /* auto-generated associations */
 
     static initModel(sequelize: Sequelize): typeof <%- modelName %> {
-    return <%- modelName %>.init(
+    return this.init(
     {
     /* auto-generated definitions */
     <% [...columns.values()].forEach(({ name, definition: { type, allowNull, primaryKey, autoIncrement, defaultValue, comment, field }}) => { -%>
