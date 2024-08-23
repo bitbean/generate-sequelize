@@ -8,9 +8,5 @@ allTables.forEach(({ relations }) => {
     });
 });
 [...joinTableAliases.entries()].forEach(([orig, sing]) => { -%>
-<% if (isSequelizeBasic) { -%>
-(class <%- sing %> extends <%- orig %> {}).initModel(sequelize);
-<% } else { -%>
-class <%- sing %> extends <%= orig %> {},
-<% } -%>
+sequelize.modelManager.addModel(class <%- sing %> extends <%- orig %> {});
 <% }) -%>

@@ -6,12 +6,14 @@ import { <%= modelName %> } from './<%= fileName %>';
 import { Sequelize } from "<%- targetLib %>";
 
 export default function initModels(sequelize: Sequelize) {
+/* auto-generated join-table-aliases */
+<%- include('../partials/join-table-aliases.ejs', { allTables }) -%>
+/* auto-generated join-table-aliases */
 sequelize.addModels([
 /* auto-generated inits */
 <% allTables.forEach(({ modelName }) => { -%>
 <%= modelName %>,
 <% }) -%>
-<%- include('./join-table-aliases.ejs', { allTables, isSequelizeBasic: false }) -%>
 /* auto-generated inits */
 ]);
 }
