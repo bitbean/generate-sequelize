@@ -67,6 +67,7 @@
       allowNull: <%- allowNull ? true : false %>,
       <%- primaryKey ? 'primaryKey: true,\n' : '' -%>
       <%- autoIncrement ? 'autoIncrement: true,\n' : '' -%>
+      <%- unique ? 'unique: true,\n' : '' -%>
       <% if (field) { -%>
       field: "<%- field %>",
       <% } -%>
