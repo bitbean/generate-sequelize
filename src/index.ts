@@ -67,19 +67,77 @@ export async function main() {
 
 function replaceRegions(filePath: string, templateFile: string) {
   if (existsSync(filePath)) {
-    return readFileSync(filePath, "utf-8").replace(
-      /\/\* start auto-generated ([a-z]+) \*\/[\s\S]*?\/\* end auto-generated \1 \*\//g,
-      (_, region) => {
-        return (
-          templateFile.match(
-            new RegExp(
-              `\\/\\* start auto-generated ${region} \\*\\/[\\s\\S]*?\\/\\* end auto-generated ${region} \\*\\/`,
-            ),
-          )?.[0] || ""
-        );
-      },
+    const existingContent = readFileSync(filePath, "utf-8");
+    let newContent = existingContent;
+    
+    // Update the timestamp in the header comment
+    const currentTimestamp = new Date().toISOString();
+    newContent = newContent.replace(
+      /Generated on: [^\n]+/,
+      `Generated on: ${currentTimestamp}`
     );
+    
+    // Function to extract content between markers, regardless of format
+    const extractTemplateContent = (region: string) => {
+      // Try to find content in new format first
+      const newFormatMatch = templateFile.match(
+        new RegExp(
+          `\\/\\* start auto-generated ${region} \\*\\/([\\s\\S]*?)\\/\\* end auto-generated ${region} \\*\\/`
+        )
+      );
+      if (newFormatMatch && newFormatMatch[1]) {
+        return newFormatMatch[1];
+      }
+      
+      // Fall back to old format
+      const oldFormatMatch = templateFile.match(
+        new RegExp(
+          `\\/\\* auto-generated ${region} \\*\\/([\\s\\S]*?)\\/\\* auto-generated ${region} \\*\\/`
+        )
+      );
+      if (oldFormatMatch && oldFormatMatch[1]) {
+        return oldFormatMatch[1];
+      }
+      
+      return "";
+    };
+    
+    // First handle old format /* auto-generated X */ ... /* auto-generated X */
+    // and convert to new format /* start auto-generated X */ ... /* end auto-generated X */
+    const oldFormatRegions = existingContent.match(/\/\* auto-generated ([a-z]+) \*\//g);
+    if (oldFormatRegions) {
+      const uniqueRegions = [...new Set(oldFormatRegions.map(r => r.match(/\/\* auto-generated ([a-z]+) \*\//)?.[1]).filter(Boolean))];
+      
+      for (const region of uniqueRegions) {
+        if (!region) continue;
+        
+        const contentToInsert = extractTemplateContent(region);
+        newContent = newContent.replace(
+          new RegExp(`\\/\\* auto-generated ${region} \\*\\/([\\s\\S]*?)\\/\\* auto-generated ${region} \\*\\/`, 'g'),
+          `/* start auto-generated ${region} */${contentToInsert}/* end auto-generated ${region} */`
+        );
+      }
+    }
+    
+    // Then handle new format /* start auto-generated X */ ... /* end auto-generated X */
+    const newFormatRegions = existingContent.match(/\/\* start auto-generated ([a-z]+) \*\//g);
+    if (newFormatRegions) {
+      const uniqueRegions = [...new Set(newFormatRegions.map(r => r.match(/\/\* start auto-generated ([a-z]+) \*\//)?.[1]).filter(Boolean))];
+      
+      for (const region of uniqueRegions) {
+        if (!region) continue;
+        
+        const contentToInsert = extractTemplateContent(region);
+        newContent = newContent.replace(
+          new RegExp(`\\/\\* start auto-generated ${region} \\*\\/[\\s\\S]*?\\/\\* end auto-generated ${region} \\*\\/`, 'g'),
+          `/* start auto-generated ${region} */${contentToInsert}/* end auto-generated ${region} */`
+        );
+      }
+    }
+    
+    return newContent;
   }
+  
   return templateFile;
 }
 
