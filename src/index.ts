@@ -68,12 +68,12 @@ export async function main() {
 function replaceRegions(filePath: string, templateFile: string) {
   if (existsSync(filePath)) {
     return readFileSync(filePath, "utf-8").replace(
-      /\/\* auto-generated ([a-z]+) \*\/[\s\S]*?\/\* auto-generated \1 \*\//g,
+      /\/\* start auto-generated ([a-z]+) \*\/[\s\S]*?\/\* end auto-generated \1 \*\//g,
       (_, region) => {
         return (
           templateFile.match(
             new RegExp(
-              `\\/\\* auto-generated ${region} \\*\\/[\\s\\S]*?\\/\\* auto-generated ${region} \\*\\/`,
+              `\\/\\* start auto-generated ${region} \\*\\/[\\s\\S]*?\\/\\* end auto-generated ${region} \\*\\/`,
             ),
           )?.[0] || ""
         );
