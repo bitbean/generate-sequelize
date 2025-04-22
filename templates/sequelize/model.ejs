@@ -47,12 +47,13 @@
     return this.init(
     {
     /* auto-generated definitions */
-    <% [...columns.values()].forEach(({ name, definition: { type, allowNull, primaryKey, autoIncrement, defaultValue, comment, field }}) => { -%>
+    <% [...columns.values()].forEach(({ name, definition: { type, allowNull, primaryKey, autoIncrement, defaultValue, comment, field, unique }}) => { -%>
     <%- name %>: {
     type: <%- type %>,
     allowNull: <%- allowNull ? true : false %>,
     <%- primaryKey ? 'primaryKey: true,\n' : '' -%>
     <%- autoIncrement ? 'autoIncrement: true,\n' : '' -%>
+    <%- unique ? 'unique: true,\n' : '' -%>
     <% if (field) { -%>
     field: "<%- field %>",
     <% } -%>
