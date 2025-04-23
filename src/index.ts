@@ -10,12 +10,38 @@ import { existsSync, readFileSync, writeFileSync } from "fs";
 import ImportManager from "./classes/ImportManager";
 import prettier from "prettier";
 
+// Regex pattern constants
+const REGEX_CHECKSUM = /Template checksum: ([a-f0-9]{32})/i;
+const REGEX_TIMESTAMP = /Generated on: [^\n]+/;
+
+// Old format patterns (/* auto-generated X */.../* auto-generated X */)
+const REGEX_OLD_FORMAT_REGIONS = /\/\* auto-generated ([a-z\-\s]+) \*\//g;
+const REGEX_OLD_FORMAT_REGION_NAME = /\/\* auto-generated ([a-z\-\s]+) \*\//;
+
+// New format patterns (/* start auto-generated X */.../* end auto-generated X */)
+const REGEX_NEW_FORMAT_REGIONS = /\/\* start auto-generated ([a-z\-\s]+) \*\//g;
+const REGEX_NEW_FORMAT_REGION_NAME = /\/\* start auto-generated ([a-z\-\s]+) \*\//;
+
+// Template regex pattern functions - construct RegExp objects for content extraction and replacement
+// Using string concatenation to avoid template literal escaping issues
+const createOldFormatRegex = (escapedRegion: string) => 
+  new RegExp("/\\* auto-generated " + escapedRegion + " \\*/([\\s\\S]*?)/\\* auto-generated " + escapedRegion + " \\*/");
+
+const createNewFormatRegex = (escapedRegion: string) => 
+  new RegExp("/\\* start auto-generated " + escapedRegion + " \\*/([\\s\\S]*?)/\\* end auto-generated " + escapedRegion + " \\*/");
+
+const createOldFormatReplaceRegex = (escapedRegion: string) => 
+  new RegExp("/\\* auto-generated " + escapedRegion + " \\*/([\\s\\S]*?)/\\* auto-generated " + escapedRegion + " \\*/", "g");
+
+const createNewFormatReplaceRegex = (escapedRegion: string) => 
+  new RegExp("/\\* start auto-generated " + escapedRegion + " \\*/([\\s\\S]*?)/\\* end auto-generated " + escapedRegion + " \\*/", "g");
+
 /**
  * Used to determine if templates have changed between runs
  * Excludes the timestamp from the calculation to prevent unnecessary updates
  */
 function calculateChecksum(content: string): string {
-  const normalizedContent = content.replace(/Generated on: [^\n]+\n?/, "");
+  const normalizedContent = content.replace(REGEX_TIMESTAMP, "");
   return crypto.createHash("md5").update(normalizedContent).digest("hex");
 }
 
@@ -88,9 +114,7 @@ function replaceRegions(
     const existingContent = readFileSync(filePath, "utf-8");
     let newContent = existingContent;
 
-    const checksumFound = existingContent.match(
-      /Template checksum: ([a-f0-9]{32})/i,
-    );
+    const checksumFound = existingContent.match(REGEX_CHECKSUM);
     const existingChecksum = checksumFound ? checksumFound[1] : null;
 
     // Note: We don't early return even if checksums match to ensure all regions are properly maintained
@@ -103,21 +127,13 @@ function replaceRegions(
       const escapedRegion = region.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
 
       // Try to find content in new format first
-      const newFormatMatch = templateFile.match(
-        new RegExp(
-          `\\/\\* start auto-generated ${escapedRegion} \\*\\/([\\s\\S]*?)\\/\\* end auto-generated ${escapedRegion} \\*\\/`,
-        ),
-      );
+      const newFormatMatch = templateFile.match(createNewFormatRegex(escapedRegion));
       if (newFormatMatch && newFormatMatch[1]) {
         return newFormatMatch[1];
       }
 
       // Fall back to old format
-      const oldFormatMatch = templateFile.match(
-        new RegExp(
-          `\\/\\* auto-generated ${escapedRegion} \\*\\/([\\s\\S]*?)\\/\\* auto-generated ${escapedRegion} \\*\\/`,
-        ),
-      );
+      const oldFormatMatch = templateFile.match(createOldFormatRegex(escapedRegion));
       if (oldFormatMatch && oldFormatMatch[1]) {
         return oldFormatMatch[1];
       }
@@ -127,14 +143,12 @@ function replaceRegions(
 
     // First handle old format /* auto-generated X */ ... /* auto-generated X */
     // and convert to new format /* start auto-generated X */ ... /* end auto-generated X */
-    const oldFormatRegions = existingContent.match(
-      /\/\* auto-generated ([a-z\-\s]+) \*\//g,
-    );
+    const oldFormatRegions = existingContent.match(REGEX_OLD_FORMAT_REGIONS);
     if (oldFormatRegions) {
       const uniqueRegions = [
         ...new Set(
           oldFormatRegions
-            .map((r) => r.match(/\/\* auto-generated ([a-z\-\s]+) \*\//)?.[1])
+            .map((r) => r.match(REGEX_OLD_FORMAT_REGION_NAME)?.[1])
             .filter(Boolean),
         ),
       ];
@@ -146,27 +160,19 @@ function replaceRegions(
         // Escape any special regex characters in the region name
         const escapedRegion = region.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
         newContent = newContent.replace(
-          new RegExp(
-            `\\/\\* auto-generated ${escapedRegion} \\*\\/([\\s\\S]*?)\\/\\* auto-generated ${escapedRegion} \\*\\/`,
-            "g",
-          ),
+          createOldFormatReplaceRegex(escapedRegion),
           `/* start auto-generated ${region} */${contentToInsert}/* end auto-generated ${region} */`,
         );
       }
     }
 
     // Then handle new format /* start auto-generated X */ ... /* end auto-generated X */
-    const newFormatRegions = existingContent.match(
-      /\/\* start auto-generated ([a-z\-\s]+) \*\//g,
-    );
+    const newFormatRegions = existingContent.match(REGEX_NEW_FORMAT_REGIONS);
     if (newFormatRegions) {
       const uniqueRegions = [
         ...new Set(
           newFormatRegions
-            .map(
-              (r) =>
-                r.match(/\/\* start auto-generated ([a-z\-\s]+) \*\//)?.[1],
-            )
+            .map((r) => r.match(REGEX_NEW_FORMAT_REGION_NAME)?.[1])
             .filter(Boolean),
         ),
       ];
@@ -178,10 +184,7 @@ function replaceRegions(
         // Escape any special regex characters in the region name
         const escapedRegion = region.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
         newContent = newContent.replace(
-          new RegExp(
-            `\\/\\* start auto-generated ${escapedRegion} \\*\\/[\\s\\S]*?\\/\\* end auto-generated ${escapedRegion} \\*\\/`,
-            "g",
-          ),
+          createNewFormatReplaceRegex(escapedRegion),
           `/* start auto-generated ${region} */${contentToInsert}/* end auto-generated ${region} */`,
         );
       }
@@ -194,7 +197,7 @@ function replaceRegions(
       : undefined;
 
     // Check if file has a header section with timestamp
-    const hasHeaderWithTimestamp = /Generated on: [^\n]+/.test(newContent);
+    const hasHeaderWithTimestamp = REGEX_TIMESTAMP.test(newContent);
 
     if (checksum) {
       if (checksumFound) {
@@ -202,7 +205,7 @@ function replaceRegions(
         if (!checksumMatches) {
           // Checksums don't match - update both timestamp and checksum
           newContent = newContent.replace(
-            /Generated on: [^\n]+[\s\S]*?Template checksum: [a-f0-9]{32}/i,
+            new RegExp(REGEX_TIMESTAMP.source + "([\\s\\S]*?)Template checksum: [a-f0-9]{32}", 'i'),
             `Generated on: ${currentTimestamp}\n * Template checksum: ${checksum}`,
           );
         }
@@ -211,13 +214,13 @@ function replaceRegions(
         if (updateTimestamp) {
           // Has timestamp but no checksum, add it. Also update timestamp
           newContent = newContent.replace(
-            /Generated on: [^\n]+/,
+            REGEX_TIMESTAMP,
             `Generated on: ${currentTimestamp}\n * Template checksum: ${checksum}`,
           );
         } else {
           // Just add checksum, keep existing timestamp
           newContent = newContent.replace(
-            /Generated on: ([^\n]+)/,
+            /Generated on: ([^\n]+)/,  // We need the capturing group here
             `Generated on: $1\n * Template checksum: ${checksum}`,
           );
         }
@@ -231,7 +234,7 @@ function replaceRegions(
         if (headerMatch && headerMatch[1]) {
           // Just add the checksum after the existing timestamp
           headerSection = headerMatch[1].replace(
-            /(Generated on: [^\n]+)/,
+            /(Generated on: [^\n]+)/,  // We need the capturing group here
             `$1\n * Template checksum: ${checksum}`,
           );
         } else {
@@ -244,7 +247,7 @@ function replaceRegions(
     } else if (hasHeaderWithTimestamp && updateTimestamp) {
       // No checksum provided, just update timestamp if needed
       newContent = newContent.replace(
-        /Generated on: [^\n]+/,
+        REGEX_TIMESTAMP,
         `Generated on: ${currentTimestamp}`,
       );
     }
@@ -259,7 +262,7 @@ function replaceRegions(
 
     // Add checksum to the header comment
     content = content.replace(
-      /Generated on: [^\n]+/,
+      REGEX_TIMESTAMP,
       `Generated on: ${newTimestamp}\n * Template checksum: ${checksum}`,
     );
 
