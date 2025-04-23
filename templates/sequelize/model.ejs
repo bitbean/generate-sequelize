@@ -64,22 +64,22 @@
     <% [...columns.values()].forEach(({ name, definition: { type, allowNull, primaryKey, autoIncrement, defaultValue,
       comment, field, unique }})=> { -%>
     <%- name %>: {
-      type: <%- type %>,
-      allowNull: <%- allowNull ? true : false %>,
-      <%- primaryKey ? 'primaryKey: true,\n' : '' -%>
-      <%- autoIncrement ? 'autoIncrement: true,\n' : '' -%>
-      <%- unique ? 'unique: true,\n' : '' -%>
-      <% if (field) { -%>
-      field: "<%- field %>",
-      <% } -%>
-      <% if (defaultValue !== undefined && defaultValue !== null) { -%>
-      <% if (typeof defaultValue === "string" && defaultValue.startsWith("fn")) { this.addImport("sequelize", "fn") } -%>
-      <% if (typeof defaultValue === "string" && defaultValue.startsWith("literal")) { this.addImport("sequelize", "literal") } -%>
-      defaultValue: <%- defaultValue %>,
-      <% } -%>
-      <% if (comment) { -%>
-      comment: "<%- comment %>",
-      <% } -%>
+    type: <%- type %>,
+    allowNull: <%- allowNull ? true : false %>,
+    <%- primaryKey ? 'primaryKey: true,\n' : '' -%>
+    <%- autoIncrement ? 'autoIncrement: true,\n' : '' -%>
+    <%- unique ? 'unique: true,\n' : '' -%>
+    <% if (field) { -%>
+    field: "<%- field %>",
+    <% } -%>
+    <% if (defaultValue !== undefined && defaultValue !== null) { -%>
+    <% if (typeof defaultValue === "string" && defaultValue.startsWith("fn")) { this.addImport("sequelize", "fn") } -%>
+    <% if (typeof defaultValue === "string" && defaultValue.startsWith("literal")) { this.addImport("sequelize", "literal") } -%>
+    defaultValue: <%- defaultValue %>,
+    <% } -%>
+    <% if (comment) { -%>
+    comment: "<%- comment %>",
+    <% } -%>
     },
     <% }) -%>
     /* end auto-generated definitions */
