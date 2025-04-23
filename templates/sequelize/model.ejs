@@ -61,7 +61,8 @@
     return this.init(
     {
     /* start auto-generated definitions */
-    <% [...columns.values()].forEach(({ name, definition: { type, allowNull, primaryKey, autoIncrement, defaultValue, comment, field }}) => { -%>
+    <% [...columns.values()].forEach(({ name, definition: { type, allowNull, primaryKey, autoIncrement, defaultValue,
+      comment, field, unique }})=> { -%>
     <%- name %>: {
       type: <%- type %>,
       allowNull: <%- allowNull ? true : false %>,
