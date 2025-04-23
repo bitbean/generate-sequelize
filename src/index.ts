@@ -1,6 +1,7 @@
 import { GeneratorOptions } from "./types";
 import getTableData from "./getDbData";
 import path from "path";
+import * as crypto from "crypto";
 import SequelizeAuto from "sequelize-auto";
 import addJoinTables from "./addJoinTables";
 import ejs from "ejs";
@@ -8,6 +9,41 @@ import { mkdirp } from "mkdirp";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import ImportManager from "./classes/ImportManager";
 import prettier from "prettier";
+
+// Regex pattern constants
+const REGEX_CHECKSUM = /Template checksum: ([a-f0-9]{32})/i;
+const REGEX_TIMESTAMP = /Generated on: [^\n]+/;
+
+// Old format patterns (/* auto-generated X */.../* auto-generated X */)
+const REGEX_OLD_FORMAT_REGIONS = /\/\* auto-generated ([a-z\-\s]+) \*\//g;
+const REGEX_OLD_FORMAT_REGION_NAME = /\/\* auto-generated ([a-z\-\s]+) \*\//;
+
+// New format patterns (/* start auto-generated X */.../* end auto-generated X */)
+const REGEX_NEW_FORMAT_REGIONS = /\/\* start auto-generated ([a-z\-\s]+) \*\//g;
+const REGEX_NEW_FORMAT_REGION_NAME = /\/\* start auto-generated ([a-z\-\s]+) \*\//;
+
+// Template regex pattern functions - construct RegExp objects for content extraction and replacement
+// Using string concatenation to avoid template literal escaping issues
+const createOldFormatRegex = (escapedRegion: string) => 
+  new RegExp("/\\* auto-generated " + escapedRegion + " \\*/([\\s\\S]*?)/\\* auto-generated " + escapedRegion + " \\*/");
+
+const createNewFormatRegex = (escapedRegion: string) => 
+  new RegExp("/\\* start auto-generated " + escapedRegion + " \\*/([\\s\\S]*?)/\\* end auto-generated " + escapedRegion + " \\*/");
+
+const createOldFormatReplaceRegex = (escapedRegion: string) => 
+  new RegExp("/\\* auto-generated " + escapedRegion + " \\*/([\\s\\S]*?)/\\* auto-generated " + escapedRegion + " \\*/", "g");
+
+const createNewFormatReplaceRegex = (escapedRegion: string) => 
+  new RegExp("/\\* start auto-generated " + escapedRegion + " \\*/([\\s\\S]*?)/\\* end auto-generated " + escapedRegion + " \\*/", "g");
+
+/**
+ * Used to determine if templates have changed between runs
+ * Excludes the timestamp from the calculation to prevent unnecessary updates
+ */
+function calculateChecksum(content: string): string {
+  const normalizedContent = content.replace(REGEX_TIMESTAMP, "");
+  return crypto.createHash("md5").update(normalizedContent).digest("hex");
+}
 
 export async function main() {
   const configPath = path.join(
@@ -48,8 +84,10 @@ export async function main() {
     const resolveImports = ejs.render(prep, importManager, {
       context: { dirName: path.join(templatesRoot, "partials") },
     });
+    const checksum = calculateChecksum(resolveImports);
+
     const fileName = path.join(config.directory, `${table.fileName}.ts`);
-    await write(fileName, resolveImports, config, table.tableName);
+    await write(fileName, resolveImports, config, table.tableName, checksum);
   });
   if (!config.noInitModels) {
     const initFile = await ejs.renderFile(
@@ -61,25 +99,176 @@ export async function main() {
       },
     );
     const initFilePath = path.join(config.directory, "init-models.ts");
-    await write(initFilePath, initFile, config, "init-models");
+    const initChecksum = calculateChecksum(initFile);
+
+    await write(initFilePath, initFile, config, "init-models", initChecksum);
   }
 }
 
-function replaceRegions(filePath: string, templateFile: string) {
+function replaceRegions(
+  filePath: string,
+  templateFile: string,
+  checksum?: string,
+): string {
   if (existsSync(filePath)) {
-    return readFileSync(filePath, "utf-8").replace(
-      /\/\* auto-generated ([a-z]+) \*\/[\s\S]*?\/\* auto-generated \1 \*\//g,
-      (_, region) => {
-        return (
-          templateFile.match(
-            new RegExp(
-              `\\/\\* auto-generated ${region} \\*\\/[\\s\\S]*?\\/\\* auto-generated ${region} \\*\\/`,
-            ),
-          )?.[0] || ""
+    const existingContent = readFileSync(filePath, "utf-8");
+    let newContent = existingContent;
+
+    const checksumFound = existingContent.match(REGEX_CHECKSUM);
+    const existingChecksum = checksumFound ? checksumFound[1] : null;
+
+    // Note: We don't early return even if checksums match to ensure all regions are properly maintained
+    const checksumMatches =
+      checksum && existingChecksum && existingChecksum === checksum;
+
+    // Function to extract content between markers, regardless of format
+    const extractTemplateContent = (region: string) => {
+      // Escape any special regex characters in the region name
+      const escapedRegion = region.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+
+      // Try to find content in new format first
+      const newFormatMatch = templateFile.match(createNewFormatRegex(escapedRegion));
+      if (newFormatMatch && newFormatMatch[1]) {
+        return newFormatMatch[1];
+      }
+
+      // Fall back to old format
+      const oldFormatMatch = templateFile.match(createOldFormatRegex(escapedRegion));
+      if (oldFormatMatch && oldFormatMatch[1]) {
+        return oldFormatMatch[1];
+      }
+
+      return "";
+    };
+
+    // First handle old format /* auto-generated X */ ... /* auto-generated X */
+    // and convert to new format /* start auto-generated X */ ... /* end auto-generated X */
+    const oldFormatRegions = existingContent.match(REGEX_OLD_FORMAT_REGIONS);
+    if (oldFormatRegions) {
+      const uniqueRegions = [
+        ...new Set(
+          oldFormatRegions
+            .map((r) => r.match(REGEX_OLD_FORMAT_REGION_NAME)?.[1])
+            .filter(Boolean),
+        ),
+      ];
+
+      for (const region of uniqueRegions) {
+        if (!region) continue;
+
+        const contentToInsert = extractTemplateContent(region);
+        // Escape any special regex characters in the region name
+        const escapedRegion = region.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+        newContent = newContent.replace(
+          createOldFormatReplaceRegex(escapedRegion),
+          `/* start auto-generated ${region} */${contentToInsert}/* end auto-generated ${region} */`,
         );
-      },
-    );
+      }
+    }
+
+    // Then handle new format /* start auto-generated X */ ... /* end auto-generated X */
+    const newFormatRegions = existingContent.match(REGEX_NEW_FORMAT_REGIONS);
+    if (newFormatRegions) {
+      const uniqueRegions = [
+        ...new Set(
+          newFormatRegions
+            .map((r) => r.match(REGEX_NEW_FORMAT_REGION_NAME)?.[1])
+            .filter(Boolean),
+        ),
+      ];
+
+      for (const region of uniqueRegions) {
+        if (!region) continue;
+
+        const contentToInsert = extractTemplateContent(region);
+        // Escape any special regex characters in the region name
+        const escapedRegion = region.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+        newContent = newContent.replace(
+          createNewFormatReplaceRegex(escapedRegion),
+          `/* start auto-generated ${region} */${contentToInsert}/* end auto-generated ${region} */`,
+        );
+      }
+    }
+
+    // Determine if we need to update the timestamp based only on checksum change
+    const updateTimestamp = !checksumMatches;
+    const currentTimestamp = updateTimestamp
+      ? new Date().toISOString()
+      : undefined;
+
+    // Check if file has a header section with timestamp
+    const hasHeaderWithTimestamp = REGEX_TIMESTAMP.test(newContent);
+
+    if (checksum) {
+      if (checksumFound) {
+        // Found a checksum in the file
+        if (!checksumMatches) {
+          // Checksums don't match - update both timestamp and checksum
+          newContent = newContent.replace(
+            new RegExp(REGEX_TIMESTAMP.source + "([\\s\\S]*?)Template checksum: [a-f0-9]{32}", 'i'),
+            `Generated on: ${currentTimestamp}\n * Template checksum: ${checksum}`,
+          );
+        }
+        // If checksums match, nothing to update
+      } else if (hasHeaderWithTimestamp) {
+        if (updateTimestamp) {
+          // Has timestamp but no checksum, add it. Also update timestamp
+          newContent = newContent.replace(
+            REGEX_TIMESTAMP,
+            `Generated on: ${currentTimestamp}\n * Template checksum: ${checksum}`,
+          );
+        } else {
+          // Just add checksum, keep existing timestamp
+          newContent = newContent.replace(
+            /Generated on: ([^\n]+)/,  // We need the capturing group here
+            `Generated on: $1\n * Template checksum: ${checksum}`,
+          );
+        }
+      } else {
+        // File has no header section at all, extract header from template and add it
+        const headerMatch = templateFile.match(
+          /^([\s\S]*?)(\/\* start auto-generated|export)/m,
+        );
+        let headerSection = "";
+
+        if (headerMatch && headerMatch[1]) {
+          // Just add the checksum after the existing timestamp
+          headerSection = headerMatch[1].replace(
+            /(Generated on: [^\n]+)/,  // We need the capturing group here
+            `$1\n * Template checksum: ${checksum}`,
+          );
+        } else {
+          // Fallback in case we can't extract the header
+          headerSection = `/**\n * MODEL FILE WITH AUTO-GENERATED SECTIONS\n * Generated on: ${currentTimestamp}\n * Template checksum: ${checksum}\n */\n\n`;
+        }
+        // Add the header at the beginning of the file
+        newContent = headerSection + newContent;
+      }
+    } else if (hasHeaderWithTimestamp && updateTimestamp) {
+      // No checksum provided, just update timestamp if needed
+      newContent = newContent.replace(
+        REGEX_TIMESTAMP,
+        `Generated on: ${currentTimestamp}`,
+      );
+    }
+
+    return newContent;
   }
+
+  // If file doesn't exist yet, add timestamp and checksum if provided
+  if (checksum) {
+    const newTimestamp = new Date().toISOString();
+    let content = templateFile;
+
+    // Add checksum to the header comment
+    content = content.replace(
+      REGEX_TIMESTAMP,
+      `Generated on: ${newTimestamp}\n * Template checksum: ${checksum}`,
+    );
+
+    return content;
+  }
+
   return templateFile;
 }
 
@@ -88,8 +277,9 @@ async function write(
   templateFile: string,
   config: GeneratorOptions,
   tableName: string,
+  checksum?: string,
 ) {
-  templateFile = replaceRegions(filePath, templateFile);
+  templateFile = replaceRegions(filePath, templateFile, checksum);
   templateFile = await prettier.format(templateFile, {
     ...config.prettierOptions,
     parser: "typescript",
