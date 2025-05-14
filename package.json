@@ -1,6 +1,6 @@
 {
   "name": "@bitbean/generate-sequelize",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "sequelize code generator for models",
   "bin": {
     "generate-sequelize": "./bin/generate-sequelize"
@@ -45,7 +45,7 @@
     "@types/ejs": "^3.1.5",
     "@types/inflection": "^1.13.2",
     "@types/node": "^20.12.13",
-    "@types/sequelize": "^4.28.15",
+    "@types/sequelize": "^4.28.20",
     "@types/uuid": "^9.0.2",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
     "@typescript-eslint/parser": "^7.11.0",

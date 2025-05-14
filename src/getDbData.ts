@@ -7,9 +7,9 @@ import {
   TableData,
 } from "./types";
 import { TableData as TData } from "sequelize-auto";
-import { TSField } from "sequelize-auto/types";
 import { getDataType, getTsType, recase, getDefaultValue } from "./utils";
 import { IndexesOptions, ModelAttributeColumnOptions } from "sequelize";
+import { TSField } from "sequelize-auto/types/types";
 
 export default function getTableData(
   tableData: TData,
@@ -43,7 +43,7 @@ export default function getTableData(
         } = col as TSField;
         const autoI =
           autoIncrement || !!(primaryKey && defaultValue) ? true : undefined;
-        const unique = getUnique(field, tableData.indexes?.[key]);
+        const unique = getIsColUnique(field, tableData.indexes?.[key]);
         const typeStr = getDataType(type, special, elementType);
         const tsType =
           getTsType(type, special, elementType) +
@@ -180,14 +180,17 @@ function getFk(name: string, foreignKeys?: TData["foreignKeys"][string]) {
   if (foreignKeys?.[name]?.isForeignKey) return foreignKeys[name];
 }
 
-function getUnique(name: string, indexes?: TData["indexes"][string]) {
+/**
+ * Returns true if the column is unique by itself
+ * @param name The name of the column
+ * @param indexes The indexes of the table
+ * @returns true if the column is unique, false otherwise
+ */
+function getIsColUnique(name: string, indexes?: TData["indexes"][string]) {
   const colIndex = indexes?.find(
     (i) =>
       !i.primary && i.unique && i.fields?.find((f) => f.attribute === name),
   );
   if (!colIndex) return undefined;
-  if (colIndex?.fields?.length === 1) {
-    return true;
-  }
-  return colIndex.name;
+  return colIndex?.fields?.length === 1;
 }

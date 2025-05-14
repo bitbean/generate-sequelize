@@ -3,7 +3,7 @@ import {
   IndexesOptions,
   Dialect,
 } from "sequelize";
-import type { CaseFileOption, CaseOption } from "sequelize-auto/types";
+import type { CaseFileOption, CaseOption } from "sequelize-auto/types/types";
 import type { Options } from "prettier";
 
 export type JoinTables =
