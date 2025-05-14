@@ -7,9 +7,9 @@ import {
   TableData,
 } from "./types";
 import { TableData as TData } from "sequelize-auto";
-import { TSField } from "sequelize-auto/types";
 import { getDataType, getTsType, recase, getDefaultValue } from "./utils";
 import { IndexesOptions, ModelAttributeColumnOptions } from "sequelize";
+import { TSField } from "sequelize-auto/types/types";
 
 export default function getTableData(
   tableData: TData,
