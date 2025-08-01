@@ -290,7 +290,7 @@ async function write(
       ([pattern, replacement, tables, excludeTables]) => {
         if (!tables || tables.includes(tableName)) {
           if (!excludeTables?.includes(tableName)) {
-            templateFile = templateFile.replace(pattern, replacement);
+            templateFile = templateFile.replaceAll(pattern, replacement);
           }
         }
       },
