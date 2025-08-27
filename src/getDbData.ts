@@ -7,7 +7,7 @@ import {
   TableData,
 } from "./types";
 import { TableData as TData } from "sequelize-auto";
-import { getDataType, getTsType, recase, getDefaultValue } from "./utils";
+import { getDataType, getTsType, recase, getDefaultValue, escapeComment } from "./utils";
 import { IndexesOptions, ModelAttributeColumnOptions } from "sequelize";
 import { TSField } from "sequelize-auto/types/types";
 
@@ -72,7 +72,7 @@ export default function getTableData(
           allowNull: !!allowNull,
           defaultValue: defaultVal,
           autoIncrement: autoI,
-          comment: comment ?? undefined,
+          comment: escapeComment(comment),
           field: name === field ? undefined : field,
           primaryKey: primaryKey || undefined,
           unique,
