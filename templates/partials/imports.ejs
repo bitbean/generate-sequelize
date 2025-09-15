@@ -1,5 +1,5 @@
 <% for( const [file, properties] of imports.entries() ) {-%>
 import {
 <%- include(this.dirName + '/import-props.ejs', { properties: [...properties] }) -%>
-} from '<%= file %>';
+} from '<%= file %>.js';
 <% } -%>

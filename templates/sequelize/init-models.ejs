@@ -1,6 +1,6 @@
 /* start auto-generated imports */
 <% allTables.forEach(({ fileName, modelName }) => { -%>
-import { <%= modelName %> } from './<%= fileName %>';
+import { <%= modelName %> } from './<%= fileName %>.js';
 <% }) -%>
 /* end auto-generated imports */
 import { Sequelize } from 'sequelize';
@@ -33,6 +33,6 @@ otherKey: "<%- relation.otherKey %>",
 
 /* start auto-generated exports */
 <% allTables.forEach(({ fileName }) => { -%>
-export * from './<%= fileName %>';
+export * from './<%= fileName %>.js';
 <% }) -%>
 /* end auto-generated exports */
