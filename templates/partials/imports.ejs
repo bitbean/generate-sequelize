@@ -1,5 +1,6 @@
 <% for( const [file, properties] of imports.entries() ) {-%>
 import {
 <%- include(this.dirName + '/import-props.ejs', { properties: [...properties] }) -%>
-} from '<%= file %>.js';
+<%# Append .js only for relative paths; keep package imports like "sequelize" unchanged. %>
+} from '<%= file.startsWith(".") && !file.endsWith(".js") ? `${file}.js` : file %>';
 <% } -%>
