@@ -7,7 +7,13 @@ import {
   TableData,
 } from "./types";
 import { TableData as TData } from "sequelize-auto";
-import { getDataType, getTsType, recase, getDefaultValue, escapeComment } from "./utils";
+import {
+  getDataType,
+  getTsType,
+  recase,
+  getDefaultValue,
+  escapeComment,
+} from "./utils";
 import { IndexesOptions, ModelAttributeColumnOptions } from "sequelize";
 import { TSField } from "sequelize-auto/types/types";
 
@@ -133,10 +139,12 @@ export default function getTableData(
       childTable.split(".").pop()!,
       parentTable.split(".").pop()!,
     ];
-    const childData = db.get(childTableName)!;
-    const fk = [...childData.columns.values()].find(
-      (c) => c.name === parentId,
-    )!;
+    const childData = db.get(childTableName);
+    const parentData2 = db.get(parentTableName);
+    // Skip relations that reference tables excluded via skipTables/tables
+    if (!childData || !parentData2) return;
+    const fk = [...childData.columns.values()].find((c) => c.name === parentId);
+    if (!fk) return;
     const optional = fk.definition.allowNull;
     const parentData: RelationData = {
       foreignKey: parentId,
@@ -167,7 +175,7 @@ export default function getTableData(
         parentProp,
       childRelData,
     );
-    db.get(parentTableName)!.relations.set(
+    parentData2.relations.set(
       options.relationRenames?.[parentTableName]?.[childProp] || childProp,
       parentData,
     );

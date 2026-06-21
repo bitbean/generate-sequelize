@@ -12,10 +12,13 @@
     "build": "run-s clean build-es build-ts",
     "build-es": "tsx scripts/esbuild.ts",
     "build-ts": "tsc",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "test-sequelize": "./bin/generate-sequelize test/sequelize-config.cjs",
     "test-sequelize-ts": "./bin/generate-sequelize test/sequelize-ts-config.cjs",
     "test-sequelize-core": "./bin/generate-sequelize test/sequelize-core-config.cjs",
-    "test": "run-s test-sequelize test-sequelize-ts test-sequelize-core"
+    "test-db": "run-s test-sequelize test-sequelize-ts test-sequelize-core",
+    "test": "run-s test:unit"
   },
   "files": [
     "lib",
@@ -67,7 +70,8 @@
     "ts-node": "^10.9.2",
     "tslib": "^2.6.3",
     "tsx": "^4.19.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^2.1.8"
   },
   "prettier": {
     "trailingComma": "all",
