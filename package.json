@@ -12,6 +12,7 @@
     "build": "run-s clean build-es build-ts",
     "build-es": "tsx scripts/esbuild.ts",
     "build-ts": "tsc",
+    "prepublishOnly": "run-s build test",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test-sequelize": "./bin/generate-sequelize test/sequelize-config.cjs",
