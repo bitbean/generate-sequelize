@@ -1,38 +1,32 @@
 /**
- * MODEL FILE WITH AUTO-GENERATED SECTIONS
- * Generated on: <%%= new Date().toISOString() %>
- *
- * This file contains auto-generated sections marked with comments.
- * Look for markers like "auto-generated imports", "auto-generated attributes", etc.
- *
- * DO NOT MODIFY THE CONTENT BETWEEN THESE MARKERS as changes will be overwritten
- * when the file is regenerated. You may add your own code outside of these sections.
- *
- * For modifications to auto-generated sections, update the database migrations
- * and run the model generation script.
+ * PARTIALLY AUTO-GENERATED<% if (generatedWarnings) { %> — DO NOT EDIT MARKED SECTIONS<% } %>.
+<% if (generatedWarnings) { -%>
+ * Changes inside auto-generated markers will be overwritten.
+ * Add custom code outside those markers.
+<% } -%>
  */
 
 import {
-/* start auto-generated sequelize imports */
+/* start auto-generated sequelize imports<%= markerWarning %> */
 <%%- include(this.dirName + "/import-props.ejs" , { properties: [...seqImports] }) -%>
   /* end auto-generated sequelize imports */
   Table,
   Model,
   } from "sequelize-typescript";
-  /* start auto-generated imports */
+  /* start auto-generated imports<%= markerWarning %> */
   <%%- include(this.dirName + "/imports.ejs" , { imports }) -%>
     /* end auto-generated imports */
     import { Optional } from "sequelize";
 
     type <%- modelName %>AttributeKeys =
-    /* start auto-generated attributes */
+    /* start auto-generated attributes<%= markerWarning %> */
     <%- include("../partials/keys.ejs", { keys: [...columns.values()].map(c => c.name) }) -%>
     /* end auto-generated attributes */
 
     export type <%- modelName %>Attributes = Pick<%- "<" %><%- modelName %>, <%- modelName %>AttributeKeys>;
 
     export type <%- modelName %>OptionalAttributes =
-    /* start auto-generated optional attributes */
+    /* start auto-generated optional attributes<%= markerWarning %> */
     <%- include("../partials/keys.ejs", { keys: [...columns.values()].filter(c => !c.definition.allowNull && ((c.definition.defaultValue !== undefined && c.definition.defaultValue !== null) || c.definition.autoIncrement)).map(c => c.name) }) -%>
     /* end auto-generated optional attributes */
 
@@ -41,7 +35,7 @@ import {
     @Table({
     tableName: "<%- tableName %>",
     indexes: [
-    /* start auto-generated indexes */
+    /* start auto-generated indexes<%= markerWarning %> */
     <% indexes.forEach(index => { -%>
     <%- JSON.stringify(index) %>,
     <% }) -%>
@@ -51,7 +45,7 @@ import {
     export class <%- modelName %>
     extends Model<%- "<" %><%- modelName %>Attributes, <%- modelName %>CreationAttributes>
     implements <%- modelName %>Attributes {
-    /* start auto-generated properties */
+    /* start auto-generated properties<%= markerWarning %> */
     <% [...columns.values()].forEach(({ name, tsType, definition: { defaultValue, allowNull, autoIncrement, primaryKey, comment, type, field }}, i, arr) => { -%>
     <%- include("../partials/handleDecorators.ejs", { data: { defaultValue, comment, autoIncrement, primaryKey }, add: (prop) => this.seqImports.add(prop) }) -%>
     <% this.seqImports.add("AllowNull") -%>
@@ -73,7 +67,7 @@ import {
     <% }) -%>
     /* end auto-generated properties */
 
-    /* start auto-generated associations */
+    /* start auto-generated associations<%= markerWarning %> */
     <% [...relations.entries()].forEach(([name, rel], i, arr) => { -%>
     <% const relType = rel.type[0].toUpperCase() + rel.type.slice(1) -%>
     <% this.seqImports.add(relType) -%>

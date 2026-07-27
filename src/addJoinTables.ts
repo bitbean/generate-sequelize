@@ -1,5 +1,6 @@
 import { Utils } from "sequelize";
 import { DBData, RelationData, JoinTables } from "./types";
+import { getRelationName } from "./getDbData";
 
 export default function addJoinTables(
   tableData: DBData,
@@ -47,18 +48,10 @@ export default function addJoinTables(
           throughAlias: Utils.singularize(table.modelName),
           throughFileName: table.fileName,
         };
-        const propName =
+        const requestedPropName =
           joinTableRenames[tableName]?.[other.foreignKey] ||
           Utils.pluralize(otherName);
-        if (targetTable.relations.has(propName)) {
-          console.warn(
-            'overwriting join m2m "' +
-              propName +
-              '" for table "' +
-              name +
-              '" because it already exists',
-          );
-        }
+        const propName = getRelationName(targetTable, requestedPropName);
         targetTable.relations.set(propName, m2m);
       });
     });

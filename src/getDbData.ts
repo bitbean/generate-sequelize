@@ -16,10 +16,12 @@ import {
 } from "./utils";
 import { IndexesOptions, ModelAttributeColumnOptions } from "sequelize";
 import { TSField } from "sequelize-auto/types/types";
+import { ColumnOrder } from "./getColumnOrder";
 
 export default function getTableData(
   tableData: TData,
   options: GeneratorOptions,
+  columnOrder?: ColumnOrder,
 ): DBData {
   const db: DBData = new Map();
   Object.entries(tableData.tables)
@@ -36,7 +38,17 @@ export default function getTableData(
       );
       const fileName = recase(tableName, options.caseFile, options.singularize);
       const columnsData: TableData["columns"] = new Map();
-      Object.entries(table).forEach(([field, col]) => {
+      const orderedColumns = Object.entries(table);
+      const positions = columnOrder?.get(key);
+      if (positions) {
+        orderedColumns.sort(
+          ([left], [right]) =>
+            (positions.get(left) ?? Number.MAX_SAFE_INTEGER) -
+              (positions.get(right) ?? Number.MAX_SAFE_INTEGER) ||
+            compareNames(left, right),
+        );
+      }
+      orderedColumns.forEach(([field, col]) => {
         const {
           allowNull,
           autoIncrement,
@@ -106,6 +118,7 @@ export default function getTableData(
       };
 
       tableData.indexes[key]?.forEach((index) => {
+        if (isUnsupportedIndex(index)) return;
         const indData: IndexesOptions = {
           name: index.name,
           unique: index.unique || undefined,
@@ -170,18 +183,39 @@ export default function getTableData(
       type: "belongsTo",
       optional: optional,
     };
-    childData.relations.set(
+    const childRelationName = getRelationName(
+      childData,
       options.relationRenames?.[childData.tableName]?.[parentProp] ||
         parentProp,
-      childRelData,
     );
-    parentData2.relations.set(
+    const parentRelationName = getRelationName(
+      parentData2,
       options.relationRenames?.[parentTableName]?.[childProp] || childProp,
-      parentData,
     );
+    childData.relations.set(childRelationName, childRelData);
+    parentData2.relations.set(parentRelationName, parentData);
   });
 
   return db;
+}
+
+function compareNames(left: string, right: string) {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+
+export function getRelationName(table: TableData, name: string) {
+  const columnNames = new Set(
+    [...table.columns.values()].map((column) => column.name),
+  );
+  if (!columnNames.has(name) && !table.relations.has(name)) return name;
+
+  const suffixedName = `${name}_relation`;
+  let candidate = suffixedName;
+  let suffix = 2;
+  while (columnNames.has(candidate) || table.relations.has(candidate)) {
+    candidate = `${suffixedName}_${suffix++}`;
+  }
+  return candidate;
 }
 
 function getFk(name: string, foreignKeys?: TData["foreignKeys"][string]) {
@@ -195,10 +229,61 @@ function getFk(name: string, foreignKeys?: TData["foreignKeys"][string]) {
  * @returns true if the column is unique, false otherwise
  */
 function getIsColUnique(name: string, indexes?: TData["indexes"][string]) {
-  const colIndex = indexes?.find(
-    (i) =>
-      !i.primary && i.unique && i.fields?.find((f) => f.attribute === name),
+  return (
+    indexes?.some(
+      (index) =>
+        !index.primary &&
+        index.unique &&
+        !isUnsupportedIndex(index) &&
+        index.fields?.length === 1 &&
+        index.fields[0]?.attribute === name,
+    ) || undefined
   );
-  if (!colIndex) return undefined;
-  return colIndex?.fields?.length === 1;
+}
+
+type AutoIndex = TData["indexes"][string][number];
+
+/**
+ * Sequelize's PostgreSQL index parser drops functional fields and partial
+ * predicates. Skip those indexes rather than generating a weaker constraint.
+ */
+function isUnsupportedIndex(index: AutoIndex) {
+  if (index.definition && /\bWHERE\b/i.test(index.definition)) return true;
+  if (index.indkey?.trim().split(/\s+/).includes("0")) return true;
+  if (index.fields?.some((field) => !field.attribute)) return true;
+
+  const definitionFieldCount = index.definition
+    ? getDefinitionFieldCount(index.definition)
+    : undefined;
+  return (
+    definitionFieldCount !== undefined &&
+    definitionFieldCount !== index.fields?.length
+  );
+}
+
+function getDefinitionFieldCount(definition: string) {
+  const using = /\bUSING\s+\w+\s*\(/i.exec(definition);
+  if (!using) return;
+
+  const start = using.index + using[0].lastIndexOf("(");
+  let depth = 0;
+  let count = 1;
+  let quote: string | undefined;
+  for (let i = start; i < definition.length; i++) {
+    const char = definition[i]!;
+    if (quote) {
+      if (char === quote && definition[i - 1] !== "\\") quote = undefined;
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+    } else if (char === "(") {
+      depth++;
+    } else if (char === ")") {
+      depth--;
+      if (depth === 0) return count;
+    } else if (char === "," && depth === 1) {
+      count++;
+    }
+  }
 }

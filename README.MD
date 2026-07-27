@@ -10,6 +10,31 @@ This is a command line tool that generates Sequelize models from a database sche
 
 `npx generate-sequelize [path-to-config (default: .generate-sequelize.cjs)]`
 
+For PostgreSQL, generated properties follow each column's database
+`ordinal_position`, so repeated generation preserves the database field order.
+
+### AI agent instructions
+
+Set `generatedWarnings: true` in the generator config to add concise warnings
+to model headers and mark every generated section with `DO NOT EDIT`.
+
+You can also add matching repository-level guidance to `AGENTS.md`:
+
+```
+npx generate-sequelize setup-agents
+```
+
+By default, this creates or updates a managed instruction block in
+`./AGENTS.md`. Pass a different file as the second argument when needed:
+
+```
+npx generate-sequelize setup-agents path/to/AGENTS.md
+```
+
+The command preserves all content outside
+`<!-- generate-sequelize:start -->` and
+`<!-- generate-sequelize:end -->`, and is safe to run repeatedly.
+
 ## Example config
 
 ```
@@ -23,6 +48,7 @@ module.exports = {
     host: "localhost",
     dialect: "mysql",
     directory: "models",
+    generatedWarnings: true,
     joinTables: ["user_roles"],
     replacements: [[/as: "medium"/g, 'as: "media"']],
     prettierOptions: {
@@ -154,9 +180,9 @@ export class users
 If a file does not exist it will be created using the default template. If it does exist, it will overwrite all regions marked with:
 
 ```
-/* auto-generated {{regionName}} */
+/* start auto-generated {{regionName}} — DO NOT EDIT */
 // all code inside here will be overwritten
-/* auto-generated {{regionName}} */
+/* end auto-generated {{regionName}} */
 ```
 
 So if you would like to add to a Model it can be done as follows:
@@ -533,6 +559,8 @@ export interface GeneratorOptions {
   host?: string;
   /** Whether to avoid creating alias property in relations */
   noAlias?: boolean;
+  /** Add explicit DO NOT EDIT warnings to generated headers and region markers */
+  generatedWarnings?: boolean;
   /** Whether to skip writing the init-models file */
   noInitModels?: boolean;
   /** Database password */

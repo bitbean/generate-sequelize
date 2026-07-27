@@ -1,4 +1,4 @@
-/* start auto-generated imports */
+/* start auto-generated imports<%= markerWarning %> */
 <% allTables.forEach(({ fileName, modelName }) => { -%>
 import { <%= modelName %> } from './<%= fileName %>.js';
 <% }) -%>
@@ -6,16 +6,16 @@ import { <%= modelName %> } from './<%= fileName %>.js';
 import { Sequelize } from 'sequelize';
 
 export default function initModels(sequelize: Sequelize) {
-/* start auto-generated join-table-aliases */
+/* start auto-generated join-table-aliases<%= markerWarning %> */
 <%- include('../partials/join-table-aliases.ejs', { allTables }) -%>
 /* end auto-generated join-table-aliases */
-/* start auto-generated inits */
+/* start auto-generated inits<%= markerWarning %> */
 <% allTables.forEach(({ modelName }) => { -%>
 <%= modelName %>.initModel(sequelize);
 <% }) -%>
 /* end auto-generated inits */
 
-/* start auto-generated associations */
+/* start auto-generated associations<%= markerWarning %> */
 <% allTables.forEach(table => { -%>
 <% [...table.relations.entries()].forEach(([name, relation]) => { -%>
 <%- table.modelName %>.<%- relation.type %>(<%- relation.targetName %>, {
@@ -31,7 +31,7 @@ otherKey: "<%- relation.otherKey %>",
 /* end auto-generated associations */
 }
 
-/* start auto-generated exports */
+/* start auto-generated exports<%= markerWarning %> */
 <% allTables.forEach(({ fileName }) => { -%>
 export * from './<%= fileName %>.js';
 <% }) -%>

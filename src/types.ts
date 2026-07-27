@@ -33,6 +33,8 @@ export interface GeneratorOptions {
   host?: string;
   /** Whether to avoid creating alias property in relations */
   noAlias?: boolean;
+  /** Add explicit DO NOT EDIT warnings to generated headers and region markers */
+  generatedWarnings?: boolean;
   /** Whether to skip writing the init-models file */
   noInitModels?: boolean;
   /** Database password */

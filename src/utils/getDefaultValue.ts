@@ -9,18 +9,35 @@ export default function getDefaultValue(
   if (typeof defaultValue !== "string") {
     return defaultValue;
   }
-  defaultValue = escapeSpecial(defaultValue);
   while (defaultValue.startsWith("(") && defaultValue.endsWith(")")) {
     // remove extra parens around mssql defaults
     defaultValue = defaultValue.replace(/^[(]/, "").replace(/[)]$/, "");
   }
+  const arrayType = tsType.replace(/\s*\|\s*null\s*$/, "");
+  if (seqType.startsWith("DataTypes.ARRAY") || arrayType.endsWith("[]")) {
+    if (
+      /^ARRAY\[\s*\](?:::.+\[\])?$/i.test(defaultValue) ||
+      /^'?\{\}'?(?:::.+\[\])?$/i.test(defaultValue)
+    ) {
+      return "[]";
+    }
+    const arrayConstructor = defaultValue.match(
+      /^ARRAY\[(.*)\](?:::.+\[\])?$/is,
+    );
+    if (arrayConstructor) {
+      // Preserve complex PostgreSQL array constructors instead of emitting
+      // malformed JavaScript after splitting SQL expressions on commas.
+      return `literal(${JSON.stringify(defaultValue)})`;
+    }
+  }
+  defaultValue = escapeSpecial(defaultValue);
   if (tsType === "boolean") {
     return /1|true/i.test(defaultValue);
   }
   let valText: string = defaultValue;
-  if (tsType.endsWith("[]")) {
+  if (arrayType.endsWith("[]")) {
     valText = defaultValue.replace(/^{/, "").replace(/}$/, "");
-    if (valText && tsType === "string[]") {
+    if (valText && arrayType === "string[]") {
       // quote the array elements
       valText = valText
         .split(",")

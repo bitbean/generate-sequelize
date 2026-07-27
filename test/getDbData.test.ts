@@ -42,15 +42,45 @@ function col(type: string, overrides: Record<string, unknown> = {}) {
 function makeTData(
   tables: TData["tables"],
   relations: TData["relations"],
+  indexes: TData["indexes"] = {},
 ): TData {
   return {
     tables,
     foreignKeys: {},
-    indexes: {},
+    indexes,
     hasTriggerTables: {},
     relations,
   } as unknown as TData;
 }
+
+describe("getTableData column order", () => {
+  it("uses PostgreSQL ordinal positions instead of introspection order", () => {
+    const td = makeTData(
+      {
+        users: {
+          email: col("text"),
+          created_at: col("timestamp"),
+          id: col("integer", { primaryKey: true }),
+        },
+      },
+      [],
+    );
+    const columnOrder = new Map([
+      [
+        "users",
+        new Map([
+          ["id", 1],
+          ["email", 2],
+          ["created_at", 3],
+        ]),
+      ],
+    ]);
+
+    const table = getTableData(td, options, columnOrder).get("users")!;
+
+    expect([...table.columns.keys()]).toEqual(["id", "email", "created_at"]);
+  });
+});
 
 describe("getTableData relations", () => {
   it("wires belongsTo + hasMany for a normal relation between present tables", () => {
@@ -180,5 +210,163 @@ describe("getTableData relations", () => {
     // Relation skipped because the FK column could not be resolved.
     expect(db.get("memberships")!.relations.size).toBe(0);
     expect(db.get("users")!.relations.size).toBe(0);
+  });
+});
+
+describe("getTableData association aliases", () => {
+  it("suffixes an association alias that collides with a column", () => {
+    const td = makeTData(
+      {
+        task_types: { id: col("integer", { primaryKey: true }) },
+        crm_tasks: {
+          id: col("integer", { primaryKey: true }),
+          task_type_id: col("integer"),
+          task_type: col("text"),
+        },
+      },
+      [
+        {
+          parentTable: "task_types",
+          parentModel: "TaskType",
+          parentProp: "task_type",
+          parentId: "task_type_id",
+          childTable: "crm_tasks",
+          childModel: "CrmTask",
+          childProp: "crm_tasks",
+          isOne: false,
+          isM2M: false,
+        },
+      ],
+    );
+
+    const tasks = getTableData(td, options).get("crm_tasks")!;
+
+    expect(tasks.columns.get("task_type")?.name).toBe("task_type");
+    expect(tasks.relations.has("task_type")).toBe(false);
+    expect(tasks.relations.get("task_type_relation")?.type).toBe("belongsTo");
+  });
+});
+
+describe("getTableData unique indexes", () => {
+  const index = (overrides: Partial<TData["indexes"][string][number]> = {}) =>
+    ({
+      name: "items_unique",
+      primary: false,
+      unique: true,
+      fields: [],
+      indkey: "",
+      definition: "",
+      tableName: "items",
+      type: "BTREE",
+      ...overrides,
+    }) as TData["indexes"][string][number];
+
+  it("sets column-level unique only for a single-column unique index", () => {
+    const td = makeTData({ items: { email: col("text") } }, [], {
+      items: [
+        index({
+          fields: [{ attribute: "email", order: "", collate: "", length: "" }],
+        }),
+      ],
+    });
+
+    const table = getTableData(td, options).get("items")!;
+    expect(table.columns.get("email")?.definition.unique).toBe(true);
+    expect(table.indexes[0]?.fields).toEqual(["email"]);
+  });
+
+  it("keeps all fields of a composite unique out of column definitions", () => {
+    const fields = ["tenant_id", "external_id"].map((attribute) => ({
+      attribute,
+      order: "",
+      collate: "",
+      length: "",
+    }));
+    const td = makeTData(
+      {
+        items: {
+          tenant_id: col("integer"),
+          external_id: col("text"),
+        },
+      },
+      [],
+      { items: [index({ fields })] },
+    );
+
+    const table = getTableData(td, options).get("items")!;
+    expect(table.columns.get("tenant_id")?.definition.unique).toBeUndefined();
+    expect(table.columns.get("external_id")?.definition.unique).toBeUndefined();
+    expect(table.indexes[0]?.fields).toEqual(["tenant_id", "external_id"]);
+    expect(table.indexes[0]?.unique).toBe(true);
+  });
+
+  it("skips a truncated functional index", () => {
+    const functional = makeTData(
+      {
+        leads: {
+          lead_id: col("integer"),
+          entity_name: col("text"),
+        },
+      },
+      [],
+      {
+        leads: [
+          index({
+            fields: [
+              {
+                attribute: "lead_id",
+                order: "",
+                collate: "",
+                length: "",
+              },
+            ],
+            indkey: "1 0",
+            definition:
+              "CREATE UNIQUE INDEX leads_unique ON leads USING btree (lead_id, lower(entity_name))",
+          }),
+        ],
+      },
+    );
+
+    const functionalTable = getTableData(functional, options).get("leads")!;
+    expect(
+      functionalTable.columns.get("lead_id")?.definition.unique,
+    ).toBeUndefined();
+    expect(functionalTable.indexes).toEqual([]);
+  });
+
+  it("skips a partial index", () => {
+    const partial = makeTData(
+      {
+        leads: {
+          lead_id: col("integer"),
+          deleted_at: col("timestamp"),
+        },
+      },
+      [],
+      {
+        leads: [
+          index({
+            fields: [
+              {
+                attribute: "lead_id",
+                order: "",
+                collate: "",
+                length: "",
+              },
+            ],
+            indkey: "1",
+            definition:
+              "CREATE UNIQUE INDEX leads_unique ON leads USING btree (lead_id) WHERE (deleted_at IS NULL)",
+          }),
+        ],
+      },
+    );
+
+    const partialTable = getTableData(partial, options).get("leads")!;
+    expect(
+      partialTable.columns.get("lead_id")?.definition.unique,
+    ).toBeUndefined();
+    expect(partialTable.indexes).toEqual([]);
   });
 });
