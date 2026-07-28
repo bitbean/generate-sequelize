@@ -7,7 +7,8 @@ export function escapeComment(comment: string | null | undefined): string | unde
   if (comment === null || comment === undefined) {
     return undefined;
   }
-  
-  // Escape single and double quotes
-  return comment.replace(/'/g, "\\'").replace(/"/g, '\\"');
+
+  // Comments are emitted inside double-quoted strings, so single quotes and
+  // forward slashes do not need escaping.
+  return comment.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }

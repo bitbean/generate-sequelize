@@ -33,3 +33,15 @@ describe("getDefaultValue PostgreSQL arrays", () => {
     ).toBe('["alpha","beta"]');
   });
 });
+
+describe("getDefaultValue string escaping", () => {
+  it("does not escape forward slashes in string defaults", () => {
+    expect(
+      getDefaultValue(
+        "America/New_York",
+        "string",
+        "DataTypes.STRING(64)",
+      ),
+    ).toBe('"America/New_York"');
+  });
+});

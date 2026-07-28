@@ -82,5 +82,5 @@ export default function getDefaultValue(
 }
 
 function escapeSpecial(val: string) {
-  return val.replace(/[\\"\n\t\r\f\b/]/g, (m) => `\\${m}`);
+  return val.replace(/[\\"\n\t\r\f\b]/g, (m) => `\\${m}`);
 }
