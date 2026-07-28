@@ -32,6 +32,7 @@
     "noErrorTruncation": true,
     // "stripInternal": true,
     "types": ["node"],
+    "rootDir": "..",
     "outDir": "lib",
     "emitDeclarationOnly": true,
     "experimentalDecorators": true
