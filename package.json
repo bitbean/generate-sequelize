@@ -3,7 +3,7 @@
   "version": "1.3.1",
   "description": "sequelize code generator for models",
   "bin": {
-    "generate-sequelize": "./bin/generate-sequelize"
+    "generate-sequelize": "bin/generate-sequelize"
   },
   "types": "lib/types.d.ts",
   "scripts": {
@@ -29,7 +29,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/bitbean/generate-sequelize"
+    "url": "git+https://github.com/bitbean/generate-sequelize.git"
   },
   "author": "",
   "license": "MIT",
