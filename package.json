@@ -1,6 +1,6 @@
 {
   "name": "@bitbean/generate-sequelize",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "sequelize code generator for models",
   "bin": {
     "generate-sequelize": "./bin/generate-sequelize"
